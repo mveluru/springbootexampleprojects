@@ -3,10 +3,13 @@ package org.bee.product.repository;
 import org.bee.product.data.LoadProductData;
 import org.bee.product.product.Product;
 
+import org.springframework.stereotype.Repository;
+
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Repository
 public class ProductRepository {
     private static Map<String, Product> productrepo = LoadProductData.loadproddata();
 

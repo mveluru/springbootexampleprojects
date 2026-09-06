@@ -36,6 +36,6 @@ public class ProductController {
 
     @GetMapping(path = "/allproducts")
     public @ResponseBody Iterable<Product> getAllProducts() {
-        return (Iterable<Product>) productService.findAll();
+        return productService.findAll();
     }
 }

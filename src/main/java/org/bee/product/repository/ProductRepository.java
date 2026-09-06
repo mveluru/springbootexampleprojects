@@ -5,6 +5,7 @@ import org.bee.product.product.Product;
 
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,6 +25,6 @@ public class ProductRepository {
     }
 
     public List<Product> findAll(){
-        return productrepo.entrySet().stream().map(e->e.getValue()).collect(Collectors.toList());
+        return new ArrayList<>(productrepo.values());
     }
 }

@@ -4,6 +4,7 @@ import org.bee.product.product.Product;
 import org.bee.product.service.ProductService;
 import org.bee.product.webclient.ProductUserWebClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -29,8 +30,12 @@ public class ProductController {
     }
 
     @GetMapping(path = "/productId/{productId}")
-    public @ResponseBody Product findById(@PathVariable String productId) {
-        return productService.findById(productId);
+    public ResponseEntity<Product> findById(@PathVariable String productId) {
+        Product product = productService.findById(productId);
+        if (product == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(product);
     }
 
 

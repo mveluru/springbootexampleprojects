@@ -1,5 +1,6 @@
 package org.bee.product.webclient;
 
+import lombok.extern.slf4j.Slf4j;
 import org.bee.product.data.ProductUserData;
 import org.springframework.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,6 +11,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 
+@Slf4j
 public class ProductUserWebClient {
    // @Value("{user.baseurl}")
    // private String userbaseurl;
@@ -30,6 +32,9 @@ public class ProductUserWebClient {
                 .bodyToMono(ProductUserData.class);
 
 
-        userMono.subscribe(System.out::println);
+        userMono.subscribe(
+                System.out::println,
+                error -> log.warn("Failed to fetch product user data: {}", error.getMessage())
+        );
     }
 }

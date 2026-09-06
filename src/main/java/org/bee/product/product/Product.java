@@ -1,10 +1,12 @@
 package org.bee.product.product;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.lang.NonNull;
 
+@Getter
+@Setter
 public class Product {
     private String productId;
-
-
     private String productName;
     private String quantity;
     private float  price;
@@ -20,37 +22,6 @@ public class Product {
 
     }
 
-    public String
-    getProductId() {
-        return productId;
-    }
 
 
-    public void setProductId(@NonNull String productId) {
-        this.productId = productId;
-    }
-
-    public String getProductName() {
-        return productName;
-    }
-
-    public void setProductName(String productName) {
-        this.productName = productName;
-    }
-
-    public String getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(String quantity) {
-        this.quantity = quantity;
-    }
-
-    public float getPrice() {
-        return price;
-    }
-
-    public void setPrice(float price) {
-        this.price = price;
-    }
 }

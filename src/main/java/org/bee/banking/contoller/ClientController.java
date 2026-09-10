@@ -1,7 +1,7 @@
 package org.bee.banking.contoller;
 
-import org.bee.banking.domain.client;
-import org.bee.banking.service.ClientService;
+import org.bee.banking.domain.Customer;
+import org.bee.banking.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class ClientController {
 
     @Autowired
-    private ClientService clientService;
+    private CustomerService clientService;
 
     @GetMapping("/name")
-    public @ResponseBody client getClient(){
-        return clientService.getClient();
+    public @ResponseBody Customer getClient(){
+        return clientService.getCustomer();
     }
 }

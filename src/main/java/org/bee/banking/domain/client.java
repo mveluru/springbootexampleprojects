@@ -17,9 +17,12 @@ public class client {
     @Size(min = 1, max = 100)
     @Pattern(regexp = "[a-zA-Z]",message = "no special chars")
     String lastName;
-    public client(@NonNull  String firstName, @NonNull String lastName) {
+    Address address;
+    @Size(min = 1, max = 100)
+    public client(@NonNull  String firstName, @NonNull String lastName, Address address) {
         this.firstName = firstName;
         this.lastName = lastName;
+        this.address = address;
     }
 
 }

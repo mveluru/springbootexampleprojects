@@ -3,12 +3,10 @@ package org.bee.banking.domain;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
+@Builder
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,7 +20,8 @@ public class Address {
     @Pattern(regexp = "[\\d+]]",message = "Non negative numbers")
     @Size(min = 5, max = 5)
     private String zip;
-    private String country;
+    @Builder.Default
+    private String country="USA";
     @NotBlank
     private String AddressLine1;
     private String AddressLine2;

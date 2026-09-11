@@ -1,5 +1,8 @@
 package org.bee.banking.domain;
 
+import lombok.Getter;
+
+@Getter
 public enum AccountType {
     CHECKING("Checking Account"),
     SAVINGS("Savings Account"),
@@ -7,6 +10,7 @@ public enum AccountType {
     RETIREMENT("Retirement Portfolio"),
     CREDIT_OR_LOAN("Line of Credit / Loan");
 
+    // Getter
     private final String displayName;
 
     // Enum Constructor
@@ -14,8 +18,4 @@ public enum AccountType {
         this.displayName = displayName;
     }
 
-    // Getter
-    public String getDisplayName() {
-        return displayName;
-    }
 }

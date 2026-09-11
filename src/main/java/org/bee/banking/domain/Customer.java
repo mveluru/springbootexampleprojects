@@ -1,22 +1,21 @@
 package org.bee.banking.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.lang.NonNull;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 
 @Getter
 @Setter
+@NoArgsConstructor
 @AllArgsConstructor
-public class Customer {
+@Builder
+public class Customer implements Serializable {
     @Size(min = 1, max = 50)
     @Pattern(regexp = "[a-zA-Z]",message = "no special chars")
     String firstName;
@@ -28,8 +27,6 @@ public class Customer {
     @NonNull
     private LocalDate dateOfBirth;
 
-    @Enumerated(EnumType.STRING)
-    private AccountType accountType;
 
     // The method name must start with "is" for the validator to pick it up automatically
     @AssertTrue(message = "Date of birth must be from year 1940 onwards")

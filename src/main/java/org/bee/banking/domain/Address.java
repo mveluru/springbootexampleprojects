@@ -6,12 +6,14 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
+import java.io.Serializable;
+
 @Builder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Address {
+public class Address implements Serializable {
     @NotBlank
     private String street;
     private String city;
@@ -23,8 +25,8 @@ public class Address {
     @Builder.Default
     private String country="USA";
     @NotBlank
-    private String AddressLine1;
-    private String AddressLine2;
+    private String addressLine1;
+    private String addressLine2;
 
 
 }

@@ -9,9 +9,6 @@ management:
     web:
       base-path: /actuator
 
-app:
-  name: "Brite Technology Notifications"
-
 spring:
   profiles:
     active: dev
@@ -29,37 +26,17 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
 
-  config:
-    additional-location: classpath:properties/common/
-
-  #Check your one note
-
 notification:
     email:
       enabled: true
       from-address: "no-reply@britesolutions.org"
       support-address: "britesupport@britesolutions.org"
       daily-limit: 200
-      default-recipients:
-        - "briteadmin@britesolutions.dev"
-        - "britesupport@britesolutions.dev"
 
     sms:
       enabled: false
       sender-id: "customerGM"
       daily-limit: 100
 
-    retry:
-      max-attempts: 3
-      backoff-millis: 500
-
-    templates:
-      welcome: "Welcome Brite Order Name, {{name}}!"
-      otp: "Your OTP is {{code}}"
-      newsletter: "Hi {{person name}}, here is our latest content."
-
     timeout-seconds: 1
     connection-pool-size: 10
-
-feature:
-    experimental-mode: true

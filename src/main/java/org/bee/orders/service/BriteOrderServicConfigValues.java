@@ -17,11 +17,7 @@ public class BriteOrderServicConfigValues {
     @Autowired
     private BriteOrderEmailConfigValues briteOrderEmailConfigValues;
     @Autowired
-    private BriteOrderNotificationConfigValues briteOrderNotificationConfigValues;
-    @Autowired
     private BriteOrderSmsNotificationConfigValues briteOrderSmsNotificationConfigValues;
-    @Autowired
-    private BriteOrderRetryConfigValues briteOrderRetryConfigValues;
     public static final Map<String,String> configValues= new HashMap<>();
     public static final Map<String,String> emailConfigValues= new HashMap<>();
     public static final Map<String,String> smsConfigValues= new HashMap<>();

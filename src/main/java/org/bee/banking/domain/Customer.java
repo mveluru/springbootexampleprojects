@@ -31,7 +31,7 @@ public class Customer implements Serializable {
     // The method name must start with "is" for the validator to pick it up automatically
     @AssertTrue(message = "Date of birth must be from year 1940 onwards")
     public boolean isDateOfBirthValid() {
-        return dateOfBirth.getYear() >= 1940;
+        return dateOfBirth != null && dateOfBirth.getYear() >= 1940;
     }
 
     public Customer(@NonNull  String firstName, @NonNull String lastName, Address address) {

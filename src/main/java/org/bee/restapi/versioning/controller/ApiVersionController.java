@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping(path = "/")
+@RequestMapping(path = "/apiversion/")
 public class ApiVersionController {
     @GetMapping(path = "v1/api")
     public @ResponseBody ApiVersion apiversion1() {

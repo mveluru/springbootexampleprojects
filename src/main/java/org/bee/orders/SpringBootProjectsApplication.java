@@ -6,7 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
-@SpringBootApplication(scanBasePackages = {"org.bee.orders", "org.bee.product", "org.bee.banking"})
+@SpringBootApplication(scanBasePackages = {"org.bee.orders", "org.bee.product", "org.bee.banking","org.bee.events"})
 @ConfigurationPropertiesScan
 public class SpringBootProjectsApplication {
 

@@ -1,14 +1,17 @@
 # SpringBootProjects (Brite Technology Notifications)
 
-A Spring Boot 3 REST application demonstrating configuration properties binding (`@ConfigurationProperties`), custom REST controllers, global exception handling, Spring Data JPA, and Spring Boot Actuator monitoring.
+A Spring Boot 3 REST application demonstrating configuration properties binding (`@ConfigurationProperties`), custom REST controllers, async processing, JSON Schema-validated event ingestion, global exception handling, Spring Data JPA, and Spring Boot Actuator monitoring.
 
 ---
 
 ## 🚀 Features
 
 - **Configuration Management**: Strongly-typed properties bound via `@ConfigurationProperties` for notification options (App, Email, SMS, Retry).
-- **REST Endpoints**: Exposes endpoints under `/v1/orders` to query live application, email, and SMS configurations.
+- **Orders Config API**: Exposes endpoints under `/v1/orders` to query live application, email, and SMS configurations.
 - **Product Catalog API**: Exposes endpoints under `/v1/product` to list, look up, and add products (in-memory catalog).
+- **Banking APIs**: Client/account lookup and registration (`/v1/client`, `/v1/api/accounts`) plus async notification demos (`/notify`, `/report`) backed by `@Async`.
+- **Event Ingestion**: `/api/events` accepts versioned event payloads validated against a JSON Schema (`event-v1.json`) and persisted via Spring Data JPA.
+- **API Versioning Demo**: `/apiversion` illustrates URI-, query-param-, header-, and content-negotiation-based API versioning strategies.
 - **Actuator Monitoring**: Integrated Spring Boot Actuator exposing health status under `/actuator/health`.
 - **Global Exception Handling**: Centralized exception handling using `@ControllerAdvice`.
 - **Database Integration**: MySQL datasource integration with Hibernate / Spring Data JPA.
@@ -27,13 +30,13 @@ A Spring Boot 3 REST application demonstrating configuration properties binding 
 
 ## ⚙️ Configuration Properties (`application.yml`)
 
-The application runs on port **`8081`** with a base servlet context path **`/brite/api`**.
+The application runs on port **`8081`** with a base servlet context path **`/brite`**.
 
 ```yaml
 server:
   port: 8081
   servlet:
-    context-path: /brite/api
+    context-path: /brite
 
 management:
   endpoints:
@@ -54,17 +57,64 @@ spring:
 
 ## 🌐 API Endpoints
 
-All REST endpoints are prefixed with `http://localhost:8081/brite/api`:
+All REST endpoints are prefixed with `http://localhost:8081/brite`:
+
+### Orders config — `/v1/orders`
 
 | Method | Endpoint Path | Description |
 | :--- | :--- | :--- |
 | `GET` | `/v1/orders/app-config/values` | Returns application connection pool size and timeout settings |
 | `GET` | `/v1/orders/email-config/values` | Returns email notification configuration values |
 | `GET` | `/v1/orders/sms-confi/values` | Returns SMS notification configuration values |
+
+### Product catalog — `/v1/product`
+
+| Method | Endpoint Path | Description |
+| :--- | :--- | :--- |
 | `GET` | `/v1/product/allproducts` | Returns all products in the catalog |
 | `GET` | `/v1/product/productId/{productId}` | Returns a single product by ID, or `404` if not found |
 | `POST` | `/v1/product/addproduct` | Adds a new product to the catalog and returns it |
 | `GET` | `/v1/product/productmessage` | Triggers an internal product/user lookup and returns a confirmation message |
+
+### Banking — clients, accounts & notifications
+
+| Method | Endpoint Path | Description |
+| :--- | :--- | :--- |
+| `GET` | `/v1/client/name` | Returns a sample customer record |
+| `POST` | `/v1/api/accounts/lookup` | Looks up an account by account number; `404` if not found |
+| `POST` | `/v1/api/accounts/register` | Registers a new customer + account |
+| `GET` | `/notify?name={name}` | Fire-and-forget async email notification demo |
+| `GET` | `/report` | Async task that returns a completed report string |
+
+### Event ingestion — `/api/events`
+
+| Method | Endpoint Path | Description |
+| :--- | :--- | :--- |
+| `POST` | `/api/events` | Validates a `v1` event payload against JSON Schema, then persists it |
+
+### Sample lookup — `/v1/sample`
+
+| Method | Endpoint Path | Description |
+| :--- | :--- | :--- |
+| `GET` | `/v1/sample/spl?item={item}` | Looks up a sample item count by name (e.g. `Mac`, `Dell`, `IBM`) |
+
+### API versioning demo — `/apiversion`
+
+| Method | Endpoint Path | Description |
+| :--- | :--- | :--- |
+| `GET` | `/apiversion/v1/api` | Versioning via URI path (v1) |
+| `GET` | `/apiversion/v2/api` | Versioning via URI path (v2) |
+| `GET` | `/apiversion/api?v1` | Versioning via request parameter (v1) |
+| `GET` | `/apiversion/api?v2` | Versioning via request parameter (v2) |
+| `GET` | `/apiversion/api` (header `X-API-VERSION: 1`) | Versioning via custom header (v1) |
+| `GET` | `/apiversion/api` (header `X-API-VERSION: 2`) | Versioning via custom header (v2) |
+| `GET` | `/apiversion/api` (`Accept: application/vnd.company.app-v1+json`) | Versioning via content negotiation (v1) |
+| `GET` | `/apiversion/api` (`Accept: application/vnd.company.app-v2+json`) | Versioning via content negotiation (v2) |
+
+### Monitoring
+
+| Method | Endpoint Path | Description |
+| :--- | :--- | :--- |
 | `GET` | `/actuator/health` | Returns Spring Boot Actuator application health status |
 
 ---
@@ -92,27 +142,58 @@ mvn spring-boot:run
 
 ```bash
 # Get Application Config
-curl -s http://localhost:8081/brite/api/v1/orders/app-config/values
+curl -s http://localhost:8081/brite/v1/orders/app-config/values
 
 # Get Email Config
-curl -s http://localhost:8081/brite/api/v1/orders/email-config/values
+curl -s http://localhost:8081/brite/v1/orders/email-config/values
 
 # Get SMS Config
-curl -s http://localhost:8081/brite/api/v1/orders/sms-confi/values
+curl -s http://localhost:8081/brite/v1/orders/sms-confi/values
 
 # Check Actuator Health
-curl -s http://localhost:8081/brite/api/actuator/health
+curl -s http://localhost:8081/brite/actuator/health
 
 # Get All Products
-curl -s http://localhost:8081/brite/api/v1/product/allproducts
+curl -s http://localhost:8081/brite/v1/product/allproducts
 
 # Get Product By ID
-curl -s http://localhost:8081/brite/api/v1/product/productId/101
+curl -s http://localhost:8081/brite/v1/product/productId/101
 
 # Add a Product
-curl -s -X POST http://localhost:8081/brite/api/v1/product/addproduct \
+curl -s -X POST http://localhost:8081/brite/v1/product/addproduct \
   -H "Content-Type: application/json" \
   -d '{"productId":"200","productName":"Test Widget","quantity":"5","price":42.5}'
+
+# Look Up a Client Account
+curl -s -X POST http://localhost:8081/brite/v1/api/accounts/lookup \
+  -H "Content-Type: application/json" \
+  -d '{"accountNumber":"CH-88291"}'
+
+# Register a New Client Account
+curl -s -X POST http://localhost:8081/brite/v1/api/accounts/register \
+  -H "Content-Type: application/json" \
+  -d '{
+        "firstName":"David","lastName":"Miller","dateOfBirth":"08/19/1994",
+        "street":"789 Pine Rd","city":"Houston","state":"TX","zip":"77001",
+        "accountType":"CHECKING"
+      }'
+
+# Trigger a Fire-and-Forget Async Notification
+curl -s "http://localhost:8081/brite/notify?name=Alice"
+
+# Submit a v1 Event
+curl -s -X POST http://localhost:8081/brite/api/events \
+  -H "Content-Type: application/json" \
+  -d '{
+        "version":"v1","eventId":"evt_123abc","timestamp":"2026-09-17T10:00:00Z",
+        "payload":{"userId":"u123","email":"user@example.com"}
+      }'
+
+# API Versioning via URI Path
+curl -s http://localhost:8081/brite/apiversion/v1/api
+
+# Sample Item Lookup
+curl -s "http://localhost:8081/brite/v1/sample/spl?item=Mac"
 ```
 
 Sample JSON Response (`/app-config/values`):

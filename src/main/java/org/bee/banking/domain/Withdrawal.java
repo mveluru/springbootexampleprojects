@@ -18,6 +18,11 @@ public class Withdrawal {
     String AccountNumber;
     @Enumerated(EnumType.STRING)
     private AccountType accountType;
+
+    LocalDate withdrawalDate= LocalDate.now();
+    BigDecimal withdrawalAmount;
+    String withdrawalStatus;
+
     @Size(min = 1, max = 50)
     @Pattern(regexp = "[a-zA-Z]+$",message = "matches one or more letters, no spaces no special chars")
     String firstName;
@@ -25,8 +30,6 @@ public class Withdrawal {
     @Pattern(regexp = "[a-zA-Z]+$",message = "matches one or more letters, no spaces ,no special chars")
     String lastName;
     Address address;
-    LocalDate withdrawalDate= LocalDate.now();
-    BigDecimal withdrawalAmount;
-    String withdrawalStatus;
+
 
 }

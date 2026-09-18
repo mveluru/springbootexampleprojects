@@ -18,10 +18,10 @@ public class WithDraw {
     @Enumerated(EnumType.STRING)
     private AccountType accountType;
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "[a-zA-Z]",message = "no special chars")
+    @Pattern(regexp = "[a-zA-Z]+$",message = "matches one or more letters, no spaces no special chars")
     String firstName;
     @Size(min = 1, max = 25)
-    @Pattern(regexp = "[a-zA-Z]",message = "no special chars")
+    @Pattern(regexp = "[a-zA-Z]+$",message = "matches one or more letters, no spaces ,no special chars")
     String lastName;
     Address address;
     Date withdrawalDate;

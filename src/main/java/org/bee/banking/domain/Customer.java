@@ -17,10 +17,10 @@ import java.time.LocalDate;
 @Builder
 public class Customer implements Serializable {
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "[a-zA-Z]",message = "no special chars")
+    @Pattern(regexp = "[a-zA-Z]+$",message = "no special chars")
     String firstName;
     @Size(min = 1, max = 25)
-    @Pattern(regexp = "[a-zA-Z]",message = "no special chars")
+    @Pattern(regexp = "[a-zA-Z]+$",message = "matches one or more letters, no spaces no special chars no special chars")
     String lastName;
     Address address;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "MM/dd/yyyy")

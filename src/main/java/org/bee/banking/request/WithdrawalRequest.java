@@ -1,19 +1,16 @@
-package org.bee.banking.domain;
+package org.bee.banking.request;
 
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import org.bee.banking.domain.AccountType;
+import org.bee.banking.domain.Address;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
-@AllArgsConstructor
-@Data
-public class WithDraw {
-
+public class WithdrawalRequest {
     String AccountNumber;
     @Enumerated(EnumType.STRING)
     private AccountType accountType;
@@ -26,5 +23,6 @@ public class WithDraw {
     Address address;
     Date withdrawalDate;
     BigDecimal withdrawAmount;
-
+    String withdrawalStatus;
 }
+

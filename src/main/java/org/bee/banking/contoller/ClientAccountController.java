@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.bee.banking.domain.Account;
 import org.bee.banking.request.AccountLookupRequest;
 import org.bee.banking.request.AccountRegistrationRequest;
+import org.bee.banking.request.WithdrawalRequest;
 import org.bee.banking.service.ClientAccountService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,5 +41,15 @@ public class ClientAccountController {
     public ResponseEntity<Account> registerAccount(@Valid @RequestBody AccountRegistrationRequest request) {
         Account createdAccount = accountService.registerNewClientAccount(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAccount);
+    }
+
+    /**
+     * Scenario C: Withdraw funds from an existing checking or savings account
+     * POST /api/accounts/withdraw
+     */
+    @PostMapping("/withdraw")
+    public ResponseEntity<Account> withdraw(@Valid @RequestBody WithdrawalRequest request) {
+        Account updatedAccount = accountService.withdrawAndSaveToAccount(request);
+        return ResponseEntity.ok(updatedAccount);
     }
 }

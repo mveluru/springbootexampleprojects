@@ -5,6 +5,8 @@ import org.bee.banking.domain.Account;
 import org.bee.banking.domain.AccountType;
 import org.bee.banking.domain.Address;
 import org.bee.banking.domain.Customer;
+import org.bee.banking.exception.AccountNotFoundException;
+import org.bee.banking.exception.InsufficientFundsException;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -59,11 +61,38 @@ public class AccountRepository {
         return account;
     }
 
-    public  void update(Account account) {
-        if (account.getCheckingAccountNumber() != null || account.getSavingAccountNumber() != null) {
+    public void update(Account account) {
+        if (account.getCheckingAccountNumber() != null) {
             dbMockStore.put(account.getCheckingAccountNumber(), account);
         }
+        if (account.getSavingAccountNumber() != null) {
+            dbMockStore.put(account.getSavingAccountNumber(), account);
+        }
+    }
 
+    /**
+     * Atomically debits the checking or savings balance under a single map operation,
+     * avoiding the lost-update race of a separate find + mutate + update sequence.
+     */
+    public Account withdraw(String accountNumber, AccountType accountType, BigDecimal amount) {
+        Account updated = dbMockStore.computeIfPresent(accountNumber, (key, account) -> {
+            BigDecimal currentBalance = accountType == AccountType.CHECKING
+                    ? account.getCheckingBalance()
+                    : account.getSavingBalance();
+            if (currentBalance == null || currentBalance.compareTo(amount) < 0) {
+                throw new InsufficientFundsException("Insufficient funds in account " + accountNumber);
+            }
+            if (accountType == AccountType.CHECKING) {
+                account.setCheckingBalance(currentBalance.subtract(amount));
+            } else {
+                account.setSavingBalance(currentBalance.subtract(amount));
+            }
+            return account;
+        });
+        if (updated == null) {
+            throw new AccountNotFoundException("Account not found: " + accountNumber);
+        }
+        return updated;
     }
 
 

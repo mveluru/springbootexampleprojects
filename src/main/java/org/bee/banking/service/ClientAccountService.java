@@ -10,6 +10,7 @@ import org.bee.banking.repository.AccountRepository;
 import org.bee.banking.request.AccountRegistrationRequest;
 import org.bee.banking.request.WithdrawalRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -39,30 +40,34 @@ public class ClientAccountService {
         return accountRepository.save(newAccountEntity);
     }
 
-    public void WithdrawAndSaveToAccount(WithdrawalRequest withdrawalRequest) {
-        AccountType requestedAcctType = null;
-        BigDecimal withDrawAmount = withdrawalRequest.getWithdrawAmount();
+    @Transactional
+    public Account withdrawAndSaveToAccount(WithdrawalRequest withdrawalRequest) {
         String accountNumber = withdrawalRequest.getAccountNumber();
-        if (accountNumber.substring(0, 2).equalsIgnoreCase("CH")) {
-            requestedAcctType = AccountType.valueOf("Checking Account");
-        } else if (accountNumber.substring(0, 2).equalsIgnoreCase("SV")) {
-            requestedAcctType = AccountType.valueOf("Saving Account");
-        }
-        assert requestedAcctType != null;
-        if (requestedAcctType.equals(withdrawalRequest.getAccountType())) {
-            Optional<Account> existingAccount = accountRepository.findByAccountNumber(accountNumber);
-            if (existingAccount.isPresent() && requestedAcctType.equals(AccountType.CHECKING)) {
-                Account existingAccountEntity = existingAccount.get();
-                existingAccountEntity.
-                        setCheckingBalance(existingAccountEntity.getSavingBalance().subtract(withDrawAmount));
-                accountRepository.update(existingAccountEntity);
+        BigDecimal withdrawAmount = withdrawalRequest.getWithdrawAmount();
 
-            } else if (existingAccount.isPresent() && requestedAcctType.equals(AccountType.SAVINGS)) {
-                Account existingAccountEntity = existingAccount.get();
-                existingAccountEntity.
-                        setSavingBalance(existingAccountEntity.getSavingBalance().subtract(withDrawAmount));
-                accountRepository.update(existingAccountEntity);
-            }
+        if (accountNumber == null || accountNumber.length() < 2) {
+            throw new IllegalArgumentException("Account number must be provided and start with CH or SV");
         }
+        if (withdrawAmount == null || withdrawAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Withdrawal amount must be positive");
+        }
+
+        String prefix = accountNumber.substring(0, 2);
+        AccountType requestedAcctType;
+        if (prefix.equalsIgnoreCase("CH")) {
+            requestedAcctType = AccountType.CHECKING;
+        } else if (prefix.equalsIgnoreCase("SV")) {
+            requestedAcctType = AccountType.SAVINGS;
+        } else {
+            throw new IllegalArgumentException("Unrecognized account number prefix: " + prefix);
+        }
+
+        if (requestedAcctType != withdrawalRequest.getAccountType()) {
+            throw new IllegalArgumentException("Requested account type does not match account number");
+        }
+
+        // Single atomic repository call avoids the find-then-mutate-then-update race
+        // between concurrent withdrawals on the same account.
+        return accountRepository.withdraw(accountNumber, requestedAcctType, withdrawAmount);
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class ClientAccountService {
@@ -42,14 +43,26 @@ public class ClientAccountService {
         AccountType requestedAcctType = null;
         BigDecimal withDrawAmount = withdrawalRequest.getWithdrawAmount();
         String accountNumber = withdrawalRequest.getAccountNumber();
-        if (accountNumber.substring(0,2).equalsIgnoreCase("CH")){
-           requestedAcctType = AccountType.valueOf("Checking Account");
-        }else if  (accountNumber.substring(0,2).equalsIgnoreCase("SV")){
-             requestedAcctType = AccountType.valueOf("Saving Account");
+        if (accountNumber.substring(0, 2).equalsIgnoreCase("CH")) {
+            requestedAcctType = AccountType.valueOf("Checking Account");
+        } else if (accountNumber.substring(0, 2).equalsIgnoreCase("SV")) {
+            requestedAcctType = AccountType.valueOf("Saving Account");
         }
         assert requestedAcctType != null;
-        if (requestedAcctType.equals(withdrawalRequest.getAccountType())){
+        if (requestedAcctType.equals(withdrawalRequest.getAccountType())) {
             Optional<Account> existingAccount = accountRepository.findByAccountNumber(accountNumber);
+            if (existingAccount.isPresent() && requestedAcctType.equals(AccountType.CHECKING)) {
+                Account existingAccountEntity = existingAccount.get();
+                existingAccountEntity.
+                        setCheckingBalance(existingAccountEntity.getSavingBalance().subtract(withDrawAmount));
+                accountRepository.update(existingAccountEntity);
+
+            } else if (existingAccount.isPresent() && requestedAcctType.equals(AccountType.SAVINGS)) {
+                Account existingAccountEntity = existingAccount.get();
+                existingAccountEntity.
+                        setSavingBalance(existingAccountEntity.getSavingBalance().subtract(withDrawAmount));
+                accountRepository.update(existingAccountEntity);
+            }
         }
     }
 }

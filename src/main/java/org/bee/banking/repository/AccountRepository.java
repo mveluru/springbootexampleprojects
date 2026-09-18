@@ -1,5 +1,6 @@
 package org.bee.banking.repository;
 
+import lombok.extern.slf4j.Slf4j;
 import org.bee.banking.domain.Account;
 import org.bee.banking.domain.AccountType;
 import org.bee.banking.domain.Address;
@@ -13,6 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
+@Slf4j
 public class AccountRepository {
     // Simple thread-safe in-memory database simulation
     private final Map<String, Account> dbMockStore = new ConcurrentHashMap<>();
@@ -56,6 +58,14 @@ public class AccountRepository {
 
         return account;
     }
+
+    public  void update(Account account) {
+        if (account.getCheckingAccountNumber() != null || account.getSavingAccountNumber() != null) {
+            dbMockStore.put(account.getCheckingAccountNumber(), account);
+        }
+
+    }
+
 
     /**
      * Seeds dummy profiles ready for immediate lookup

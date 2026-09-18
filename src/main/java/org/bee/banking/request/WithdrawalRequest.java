@@ -4,12 +4,16 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
 import org.bee.banking.domain.AccountType;
 import org.bee.banking.domain.Address;
 
 import java.math.BigDecimal;
 import java.util.Date;
 
+@Getter
+@Setter
 public class WithdrawalRequest {
     String AccountNumber;
     @Enumerated(EnumType.STRING)

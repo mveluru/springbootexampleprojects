@@ -27,7 +27,6 @@ public class Withdrawal {
     Address address;
     LocalDate withdrawalDate= LocalDate.now();
     BigDecimal withdrawalAmount;
-    BigDecimal withdrawAmount;
     String withdrawalStatus;
 
 }

@@ -1,7 +1,7 @@
-package org.bee.product.repository;
+package org.bee.retail.repository;
 
-import org.bee.product.data.LoadProductData;
-import org.bee.product.product.Product;
+import org.bee.retail.data.LoadProductData;
+import org.bee.retail.product.Product;
 
 import org.springframework.stereotype.Repository;
 

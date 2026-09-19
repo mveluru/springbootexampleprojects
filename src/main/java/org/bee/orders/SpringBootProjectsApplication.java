@@ -9,11 +9,11 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableAsync;
 
-@SpringBootApplication(scanBasePackages = {"org.bee.orders", "org.bee.product", "org.bee.banking", "org.bee.events", "org.bee.restapi", "org.bee.sample"})
+@SpringBootApplication(scanBasePackages = {"org.bee.orders", "org.bee.retail", "org.bee.banking", "org.bee.events", "org.bee.restapi", "org.bee.sample"})
 @EnableAsync
 @ConfigurationPropertiesScan
-@EnableJpaRepositories(basePackages = {"org.bee.orders", "org.bee.product", "org.bee.banking", "org.bee.events"})
-@EntityScan(basePackages = {"org.bee.orders", "org.bee.product", "org.bee.banking", "org.bee.events"})
+@EnableJpaRepositories(basePackages = {"org.bee.orders", "org.bee.retail", "org.bee.banking", "org.bee.events"})
+@EntityScan(basePackages = {"org.bee.orders", "org.bee.retail", "org.bee.banking", "org.bee.events"})
 public class SpringBootProjectsApplication {
 
     public static void main(String[] args) {

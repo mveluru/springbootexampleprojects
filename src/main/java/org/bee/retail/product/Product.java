@@ -1,4 +1,4 @@
-package org.bee.product.product;
+package org.bee.retail.product;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.lang.NonNull;

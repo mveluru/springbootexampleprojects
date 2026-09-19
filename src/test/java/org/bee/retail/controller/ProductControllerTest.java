@@ -1,4 +1,4 @@
-package org.bee.product.controller;
+package org.bee.retail.controller;
 
 import org.bee.orders.SpringBootProjectsApplication;
 import org.junit.jupiter.api.Test;

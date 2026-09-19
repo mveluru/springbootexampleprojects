@@ -1,7 +1,7 @@
-package org.bee.product.webclient;
+package org.bee.retail.webclient;
 
 import lombok.extern.slf4j.Slf4j;
-import org.bee.product.data.ProductUserData;
+import org.bee.retail.data.ProductUserData;
 import org.springframework.http.HttpHeaders;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;

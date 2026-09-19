@@ -1,6 +1,6 @@
 package org.bee.banking.exception;
 
-public class MinBalanceException extends Exception {
+public class MinBalanceException extends RuntimeException {
     public MinBalanceException(String message) {
         super(message);
     }

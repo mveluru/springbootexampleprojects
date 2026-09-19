@@ -14,6 +14,10 @@ public final class BankingMessages {
     public static final String DEPOSIT_TYPE_INVALID = "Deposit type must be 'cash' or 'check'";
     public static final String INSUFFICIENT_FUNDS = "Insufficient funds in account %s";
     public static final String ACCOUNT_NOT_FOUND = "Account not found: %s";
+    public static final String MINIMUM_AGE_VIOLATION = "Customer must be at least %d years old to open an account";
+    public static final String MAX_CASH_DEPOSIT_EXCEEDED = "Cash deposits cannot exceed %s";
+    public static final String MIN_BALANCE_VIOLATION = "Withdrawal declined: account %s must retain a minimum balance of %s";
+    public static final String STATEMENT_RANGE_EXCEEDED = "Statement date range cannot exceed %d months";
 
     // AccountRepository log messages (Slf4j-style, {} placeholders)
     public static final String LOG_ACCOUNT_NUMBER_GENERATED = "Generated new {} account number {}";
@@ -24,9 +28,13 @@ public final class BankingMessages {
     public static final String LOG_WITHDRAWAL_SUCCESS = "Withdrew {} from {} account {}";
     public static final String LOG_DEPOSIT_ACCOUNT_NOT_FOUND = "Deposit failed: account {} not found";
     public static final String LOG_DEPOSIT_SUCCESS = "Deposited {} into {} account {}";
+    public static final String LOG_WITHDRAWAL_BELOW_MINIMUM_BALANCE = "Withdrawal of {} rejected for account {}: resulting balance {} would be below minimum {}";
 
     // WithdrawalRepository log messages
     public static final String LOG_WITHDRAWAL_HISTORY_RECORDED = "Recorded withdrawal history entry for account {}: amount={}, status={}";
+
+    // TransactionRepository log messages
+    public static final String LOG_TRANSACTION_RECORDED = "Recorded {} transaction for account {}: amount={}, balanceAfter={}";
 
     // ClientAccountService log messages
     public static final String LOG_ACCOUNT_LOOKUP = "Looking up account {}";
@@ -43,11 +51,21 @@ public final class BankingMessages {
     public static final String LOG_DEPOSIT_REJECTED_TYPE_MISMATCH = "Deposit rejected for account {}: requested type {} does not match account type {}";
     public static final String LOG_DEPOSIT_REJECTED_TYPE_INVALID = "Deposit rejected for account {}: invalid deposit type {}";
     public static final String LOG_DEPOSIT_PROCESSING = "Processing {} deposit of {} into {} account {}";
+    public static final String LOG_DEPOSIT_REJECTED_MAX_CASH = "Deposit rejected for account {}: cash amount {} exceeds maximum {}";
+    public static final String LOG_REGISTRATION_REJECTED_AGE = "Registration rejected: age {} is below minimum {}";
+
+    // BankStatementService log messages
+    public static final String LOG_STATEMENT_REJECTED_RANGE = "Statement rejected for account {}: range {} to {} exceeds maximum {} months";
+    public static final String LOG_STATEMENT_GENERATED = "Generated statement for account {}: {} transactions between {} and {}";
 
     // BankingExceptionHandler log messages
     public static final String LOG_HANDLER_ACCOUNT_NOT_FOUND = "Account not found: {}";
     public static final String LOG_HANDLER_INSUFFICIENT_FUNDS = "Insufficient funds: {}";
     public static final String LOG_HANDLER_INVALID_REQUEST = "Invalid banking request: {}";
+    public static final String LOG_HANDLER_AGE_VIOLATION = "Age constraint violated: {}";
+    public static final String LOG_HANDLER_MIN_BALANCE_VIOLATION = "Minimum balance constraint violated: {}";
+    public static final String LOG_HANDLER_MAX_DEPOSIT_VIOLATION = "Maximum cash deposit constraint violated: {}";
+    public static final String LOG_HANDLER_STATEMENT_RANGE_VIOLATION = "Statement range constraint violated: {}";
 
     // NotificationService log messages
     public static final String LOG_EMAIL_SENT = "Email sent to {} on thread: {}";

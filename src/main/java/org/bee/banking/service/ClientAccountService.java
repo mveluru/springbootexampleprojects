@@ -5,20 +5,27 @@ import lombok.extern.slf4j.Slf4j;
 import org.bee.banking.component.AccountMapper;
 import org.bee.banking.component.WithdrawalMapper;
 import org.bee.banking.domain.Account;
+import org.bee.banking.domain.AccountTransaction;
 import org.bee.banking.domain.AccountType;
 import org.bee.banking.domain.DepositForm;
+import org.bee.banking.domain.TransactionType;
 import org.bee.banking.domain.WithdrawalForm;
+import org.bee.banking.exception.AgeException;
+import org.bee.banking.exception.MaxDepositAmountException;
 import org.bee.banking.messages.BankingMessages;
+import org.bee.banking.repository.TransactionRepository;
 import org.bee.banking.repository.WithdrawalRepository;
 import org.bee.banking.request.AccountLookupRequest;
 import org.bee.banking.repository.AccountRepository;
 import org.bee.banking.request.AccountRegistrationRequest;
 import org.bee.banking.request.WithdrawalRequest;
+import org.bee.banking.rules.AccountConstraints;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.Optional;
 
 @Service
@@ -29,6 +36,8 @@ public class ClientAccountService {
     private final AccountMapper accountMapper;
     private final WithdrawalMapper withdrawalMapper;
     private final WithdrawalRepository withdrawalRespository;
+    private final TransactionRepository transactionRepository;
+    private final AccountConstraints accountConstraints;
 
     /**
      * Flow A: Look up consumer account details
@@ -46,6 +55,13 @@ public class ClientAccountService {
      * Flow B: Register and save brand new profiles dynamically
      */
     public Account registerNewClientAccount(AccountRegistrationRequest request) {
+        int age = Period.between(request.getDateOfBirth(), LocalDate.now()).getYears();
+        int minimumAge = accountConstraints.getMinimumAge();
+        if (minimumAge > 0 && age < minimumAge) {
+            log.warn(BankingMessages.LOG_REGISTRATION_REJECTED_AGE, age, minimumAge);
+            throw new AgeException(String.format(BankingMessages.MINIMUM_AGE_VIOLATION, minimumAge));
+        }
+
         // MapStruct constructs nested object structure automatically
         Account newAccountEntity = accountMapper.toAccountEntity(request);
 
@@ -106,6 +122,16 @@ public class ClientAccountService {
         );
         withdrawalRespository.createWithdrawal(historyRecord);
 
+        BigDecimal balanceAfter = requestedAcctType == AccountType.CHECKING
+                ? updatedAccount.getCheckingBalance() : updatedAccount.getSavingBalance();
+        transactionRepository.recordTransaction(AccountTransaction.builder()
+                .accountNumber(accountNumber)
+                .transactionType(TransactionType.WITHDRAWAL)
+                .amount(withdrawAmount)
+                .balanceAfter(balanceAfter)
+                .transactionDate(LocalDate.now())
+                .build());
+
         return updatedAccount;
     }
 
@@ -146,10 +172,28 @@ public class ClientAccountService {
             throw new IllegalArgumentException(BankingMessages.DEPOSIT_TYPE_INVALID);
         }
 
+        BigDecimal maxCashDeposit = accountConstraints.getMaximumDepositAmountByCash();
+        if ("cash".equalsIgnoreCase(depositType) && maxCashDeposit != null && amount.compareTo(maxCashDeposit) > 0) {
+            log.warn(BankingMessages.LOG_DEPOSIT_REJECTED_MAX_CASH, accountNumber, amount, maxCashDeposit);
+            throw new MaxDepositAmountException(String.format(BankingMessages.MAX_CASH_DEPOSIT_EXCEEDED, maxCashDeposit));
+        }
+
         log.info(BankingMessages.LOG_DEPOSIT_PROCESSING, depositType, amount, requestedAcctType, accountNumber);
 
         // Single atomic repository call avoids the find-then-mutate-then-update race
         // between concurrent deposits on the same account.
-        return accountRepository.deposit(accountNumber, requestedAcctType, amount);
+        Account updatedAccount = accountRepository.deposit(accountNumber, requestedAcctType, amount);
+
+        BigDecimal balanceAfter = requestedAcctType == AccountType.CHECKING
+                ? updatedAccount.getCheckingBalance() : updatedAccount.getSavingBalance();
+        transactionRepository.recordTransaction(AccountTransaction.builder()
+                .accountNumber(accountNumber)
+                .transactionType(TransactionType.DEPOSIT)
+                .amount(amount)
+                .balanceAfter(balanceAfter)
+                .transactionDate(LocalDate.now())
+                .build());
+
+        return updatedAccount;
     }
 }

@@ -5,16 +5,17 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BankStatement {
+public class AccountTransaction {
     private String accountNumber;
-    private LocalDate beginDate;
-    private LocalDate endDate;
-    private List<AccountTransaction> transactions;
+    private TransactionType transactionType;
+    private BigDecimal amount;
+    private BigDecimal balanceAfter;
+    private LocalDate transactionDate;
 }

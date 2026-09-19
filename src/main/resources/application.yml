@@ -41,6 +41,14 @@ notification:
     timeout-seconds: 1
     connection-pool-size: 10
 
+banking:
+  constraints:
+    maximum-deposit-amount-by-cash: 5000.00
+    minimum-age: 18
+    checking-minimum-balance: 25.00
+    saving-minimum-balance: 100.00
+    max-statement-range-months: 18
+
 resilience4j:
   circuitbreaker:
     instances:

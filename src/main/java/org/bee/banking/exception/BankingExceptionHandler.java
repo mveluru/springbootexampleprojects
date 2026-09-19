@@ -36,4 +36,40 @@ public class BankingExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ex.getMessage());
     }
+
+    @ExceptionHandler(AgeException.class)
+    public ResponseEntity<String> handleAgeException(
+            AgeException ex) {
+        log.warn(BankingMessages.LOG_HANDLER_AGE_VIOLATION, ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(MinBalanceException.class)
+    public ResponseEntity<String> handleMinBalanceException(
+            MinBalanceException ex) {
+        log.warn(BankingMessages.LOG_HANDLER_MIN_BALANCE_VIOLATION, ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(MaxDepositAmountException.class)
+    public ResponseEntity<String> handleMaxDepositAmountException(
+            MaxDepositAmountException ex) {
+        log.warn(BankingMessages.LOG_HANDLER_MAX_DEPOSIT_VIOLATION, ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ex.getMessage());
+    }
+
+    @ExceptionHandler(StatementRangeExceededException.class)
+    public ResponseEntity<String> handleStatementRangeExceededException(
+            StatementRangeExceededException ex) {
+        log.warn(BankingMessages.LOG_HANDLER_STATEMENT_RANGE_VIOLATION, ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ex.getMessage());
+    }
 }

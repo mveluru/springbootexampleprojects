@@ -7,7 +7,9 @@ import org.bee.banking.domain.Address;
 import org.bee.banking.domain.Customer;
 import org.bee.banking.exception.AccountNotFoundException;
 import org.bee.banking.exception.InsufficientFundsException;
+import org.bee.banking.exception.MinBalanceException;
 import org.bee.banking.messages.BankingMessages;
+import org.bee.banking.rules.AccountConstraints;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -21,9 +23,11 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AccountRepository {
     // Simple thread-safe in-memory database simulation
     private final Map<String, Account> dbMockStore = new ConcurrentHashMap<>();
+    private final AccountConstraints accountConstraints;
 
     // Constructor seeds initial mock data for Flow A testing
-    public AccountRepository() {
+    public AccountRepository(AccountConstraints accountConstraints) {
+        this.accountConstraints = accountConstraints;
         seedInitialMockData();
     }
 
@@ -89,10 +93,18 @@ public class AccountRepository {
                 log.warn(BankingMessages.LOG_WITHDRAWAL_INSUFFICIENT_FUNDS, amount, accountNumber, currentBalance);
                 throw new InsufficientFundsException(String.format(BankingMessages.INSUFFICIENT_FUNDS, accountNumber));
             }
+            BigDecimal newBalance = currentBalance.subtract(amount);
+            BigDecimal minimumBalance = accountType == AccountType.CHECKING
+                    ? accountConstraints.getCheckingMinimumBalance()
+                    : accountConstraints.getSavingMinimumBalance();
+            if (minimumBalance != null && newBalance.compareTo(minimumBalance) < 0) {
+                log.warn(BankingMessages.LOG_WITHDRAWAL_BELOW_MINIMUM_BALANCE, amount, accountNumber, newBalance, minimumBalance);
+                throw new MinBalanceException(String.format(BankingMessages.MIN_BALANCE_VIOLATION, accountNumber, minimumBalance));
+            }
             if (accountType == AccountType.CHECKING) {
-                account.setCheckingBalance(currentBalance.subtract(amount));
+                account.setCheckingBalance(newBalance);
             } else {
-                account.setSavingBalance(currentBalance.subtract(amount));
+                account.setSavingBalance(newBalance);
             }
             return account;
         });

@@ -10,6 +10,8 @@ A Spring Boot 3 REST application demonstrating configuration properties binding 
 - **Configs API**: Exposes endpoints under `/v1/configs` to query live application, email, and SMS configurations.
 - **Product Catalog API**: Exposes endpoints under `/v1/product` to list, look up, and add products (in-memory catalog).
 - **Banking APIs**: Client/account lookup, registration, withdrawal, and deposit (`/v1/client`, `/v1/api/accounts`) — withdrawals and deposits are applied atomically per account and withdrawals are recorded to an in-memory history — plus async notification demos (`/notify`, `/report`) backed by `@Async`.
+- **Account Constraints**: Configurable business rules (`banking.constraints`) enforced on registration/withdrawal/deposit — minimum age to open an account, minimum balance retained after a withdrawal (checking/savings), and a maximum single cash-deposit amount.
+- **Bank Statement**: `/v1/api/accounts/{accountNumber}/statement` returns an account's deposit/withdrawal history for a given date range, capped by a configurable maximum range in months.
 - **Resilience Demo**: `/v1/payment/process` demonstrates a Resilience4j circuit breaker with jittered exponential-backoff retry around a simulated flaky downstream call.
 - **Event Ingestion**: `/api/events` accepts versioned event payloads validated against a JSON Schema (`event-v1.json`) and persisted via Spring Data JPA.
 - **API Versioning Demo**: `/apiversion` illustrates URI-, query-param-, header-, and content-negotiation-based API versioning strategies.
@@ -53,6 +55,14 @@ spring:
     url: jdbc:mysql://localhost:3306/db_example?useSSL=false
     username: root
     password: <password>
+
+banking:
+  constraints:
+    maximum-deposit-amount-by-cash: 5000.00
+    minimum-age: 18
+    checking-minimum-balance: 25.00
+    saving-minimum-balance: 100.00
+    max-statement-range-months: 18
 
 resilience4j:
   circuitbreaker:
@@ -105,7 +115,8 @@ All REST endpoints are prefixed with `http://localhost:8081/brite`:
 | `POST` | `/v1/api/accounts/lookup` | Looks up an account by account number; `404` if not found |
 | `POST` | `/v1/api/accounts/register` | Registers a new customer + account |
 | `POST` | `/v1/api/accounts/withdraw` | Withdraws funds from a checking/savings account; `400` on insufficient funds or mismatched account type, `404` if the account doesn't exist |
-| `POST` | `/v1/api/accounts/deposit` | Deposits funds into a checking/savings account; `400` on invalid amount/deposit type or mismatched account type, `404` if the account doesn't exist |
+| `POST` | `/v1/api/accounts/deposit` | Deposits funds into a checking/savings account; `400` on invalid amount/deposit type, mismatched account type, or a cash amount over the configured maximum, `404` if the account doesn't exist |
+| `GET` | `/v1/api/accounts/{accountNumber}/statement?beginDate=yyyy-MM-dd&endDate=yyyy-MM-dd` | Returns a bank statement (deposit/withdrawal history) for the account in the given range; `400` if the range exceeds the configured maximum months, `404` if the account doesn't exist |
 | `GET` | `/notify?name={name}` | Fire-and-forget async email notification demo |
 | `GET` | `/report` | Async task that returns a completed report string |
 
@@ -224,6 +235,9 @@ curl -s -X POST http://localhost:8081/brite/v1/api/accounts/deposit \
         "firstName":"Alice","lastName":"Smith","street":"123 Main St","city":"Austin",
         "state":"TX","zip":"78701","addressLine1":"Apt 4B"
       }'
+
+# Get a Bank Statement
+curl -s "http://localhost:8081/brite/v1/api/accounts/CH-88291/statement?beginDate=2026-01-01&endDate=2026-12-31"
 
 # Trigger a Fire-and-Forget Async Notification
 curl -s "http://localhost:8081/brite/notify?name=Alice"

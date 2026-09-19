@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication(scanBasePackages = {"org.bee.configs", "org.bee.retail", "org.bee.banking", "org.bee.events", "org.bee.restapi", "org.bee.sample"})
 @EnableAsync
-@ConfigurationPropertiesScan
+@ConfigurationPropertiesScan(basePackages = {"org.bee.configs", "org.bee.retail", "org.bee.banking", "org.bee.events", "org.bee.restapi", "org.bee.sample"})
 @EnableJpaRepositories(basePackages = {"org.bee.configs", "org.bee.retail", "org.bee.banking", "org.bee.events"})
 @EntityScan(basePackages = {"org.bee.configs", "org.bee.retail", "org.bee.banking", "org.bee.events"})
 public class SpringBootProjectsApplication {

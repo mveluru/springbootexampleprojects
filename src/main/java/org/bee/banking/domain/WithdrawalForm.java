@@ -20,8 +20,8 @@ public class WithdrawalForm {
     private AccountType accountType;
 
     LocalDate withdrawalDate= LocalDate.now();
-    BigDecimal withdrawalAmount;
-    String withdrawalStatus;
+    BigDecimal withdrawalAmount; // upto two decimals e.g. $100.75
+    String withdrawalStatus;// Completed , Rejected
 
     @Size(min = 1, max = 50)
     @Pattern(regexp = "^[a-zA-Z]+$",message = "matches one or more letters, no spaces,no special chars")

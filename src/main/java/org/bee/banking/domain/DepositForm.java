@@ -39,7 +39,7 @@ public class DepositForm {
 
     @NotBlank(message = "Zip code is required")
     @Size(min =5, max = 5)
-    @Pattern(regexp = "[0-9]+$")
+    @Pattern(regexp = "\\d+")
     private String zip;
 
 

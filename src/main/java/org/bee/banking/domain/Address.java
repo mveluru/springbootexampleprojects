@@ -21,11 +21,14 @@ public class Address implements Serializable {
     @NotBlank
     @Pattern(regexp = "[\\d+]]",message = "Non negative numbers")
     @Size(min = 5, max = 5)
+    @Pattern(regexp = "\\d+")
     private String zip;
     @Builder.Default
     private String country="USA";
     @NotBlank
+    @Size(min = 1, max = 50)
     private String addressLine1;
+    @Size(min = 1, max = 50)
     private String addressLine2;
 
 

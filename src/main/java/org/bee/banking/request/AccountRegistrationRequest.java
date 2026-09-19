@@ -3,6 +3,7 @@ package org.bee.banking.request;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -40,9 +41,13 @@ public class AccountRegistrationRequest {
     private String state;
 
     @NotBlank(message = "Zip code is required")
+    @Pattern(regexp = "\\d+")
     private String zip;
 
+    @NotBlank(message = "Address line1 is required")
+    @Size(min = 1, max = 50, message = "Address line1 is required")
     private String addressLine1;
+
     private String addressLine2;
 
     @NotBlank(message = "Account type is required")

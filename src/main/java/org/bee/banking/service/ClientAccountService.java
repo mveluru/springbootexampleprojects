@@ -2,9 +2,11 @@ package org.bee.banking.service;
 
 import lombok.RequiredArgsConstructor;
 import org.bee.banking.component.AccountMapper;
+import org.bee.banking.component.WithdrawalMapper;
 import org.bee.banking.domain.Account;
 import org.bee.banking.domain.AccountType;
 import org.bee.banking.domain.DepositForm;
+import org.bee.banking.domain.WithdrawalForm;
 import org.bee.banking.repository.WithdrawalRespository;
 import org.bee.banking.request.AccountLookupRequest;
 import org.bee.banking.repository.AccountRepository;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -21,6 +24,7 @@ import java.util.Optional;
 public class ClientAccountService {
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
+    private final WithdrawalMapper withdrawalMapper;
     private final WithdrawalRespository withdrawalRespository;
 
     /**
@@ -69,7 +73,21 @@ public class ClientAccountService {
 
         // Single atomic repository call avoids the find-then-mutate-then-update race
         // between concurrent withdrawals on the same account.
-        return accountRepository.withdraw(accountNumber, requestedAcctType, withdrawAmount);
+        Account updatedAccount = accountRepository.withdraw(accountNumber, requestedAcctType, withdrawAmount);
+
+        WithdrawalForm historyRecord = new WithdrawalForm(
+                accountNumber,
+                requestedAcctType,
+                LocalDate.now(),
+                withdrawAmount,
+                "COMPLETED",
+                withdrawalRequest.getFirstName(),
+                withdrawalRequest.getLastName(),
+                withdrawalMapper.toWithdrawalCustomerAddressEntity(withdrawalRequest)
+        );
+        withdrawalRespository.createWithdrawal(historyRecord);
+
+        return updatedAccount;
     }
 
     @Transactional

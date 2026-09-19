@@ -8,6 +8,7 @@ import org.springframework.util.Assert;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @Getter
 @Repository
@@ -16,5 +17,8 @@ public class WithdrawalRespository {
 
     public void createWithdrawal(WithdrawalForm withdrawalForm) {
         Assert.notNull(withdrawalForm, "withdrawal must not be null");
+        WithDrawalHistory
+                .computeIfAbsent(withdrawalForm.getAccountNumber(), key -> new CopyOnWriteArrayList<>())
+                .add(withdrawalForm);
     }
 }

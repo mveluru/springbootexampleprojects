@@ -8,6 +8,7 @@ import org.bee.banking.domain.Account;
 import org.bee.banking.domain.AccountType;
 import org.bee.banking.domain.DepositForm;
 import org.bee.banking.domain.WithdrawalForm;
+import org.bee.banking.messages.StaticMessages;
 import org.bee.banking.repository.WithdrawalRespository;
 import org.bee.banking.request.AccountLookupRequest;
 import org.bee.banking.repository.AccountRepository;
@@ -63,11 +64,11 @@ public class ClientAccountService {
 
         if (accountNumber == null || accountNumber.length() < 2) {
             log.warn("Withdrawal rejected: missing/malformed account number");
-            throw new IllegalArgumentException("Account number must be provided and start with CH or SV");
+            throw new IllegalArgumentException(StaticMessages.ACCOUNT_NUMBER_REQUIRED);
         }
         if (withdrawAmount == null || withdrawAmount.compareTo(BigDecimal.ZERO) <= 0) {
             log.warn("Withdrawal rejected for account {}: amount must be positive, got {}", accountNumber, withdrawAmount);
-            throw new IllegalArgumentException("Withdrawal amount must be positive");
+            throw new IllegalArgumentException(StaticMessages.WITHDRAWAL_AMOUNT_POSITIVE);
         }
 
         String prefix = accountNumber.substring(0, 2);
@@ -78,13 +79,13 @@ public class ClientAccountService {
             requestedAcctType = AccountType.SAVINGS;
         } else {
             log.warn("Withdrawal rejected: unrecognized account number prefix {}", prefix);
-            throw new IllegalArgumentException("Unrecognized account number prefix: " + prefix);
+            throw new IllegalArgumentException(String.format(StaticMessages.UNRECOGNIZED_ACCOUNT_PREFIX, prefix));
         }
 
         if (requestedAcctType != withdrawalRequest.getAccountType()) {
             log.warn("Withdrawal rejected for account {}: requested type {} does not match account type {}",
                     accountNumber, withdrawalRequest.getAccountType(), requestedAcctType);
-            throw new IllegalArgumentException("Requested account type does not match account number");
+            throw new IllegalArgumentException(StaticMessages.ACCOUNT_TYPE_MISMATCH);
         }
 
         log.info("Processing withdrawal of {} from {} account {}", withdrawAmount, requestedAcctType, accountNumber);
@@ -115,11 +116,11 @@ public class ClientAccountService {
 
         if (accountNumber == null || accountNumber.length() < 2) {
             log.warn("Deposit rejected: missing/malformed account number");
-            throw new IllegalArgumentException("Account number must be provided and start with CH or SV");
+            throw new IllegalArgumentException(StaticMessages.ACCOUNT_NUMBER_REQUIRED);
         }
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             log.warn("Deposit rejected for account {}: amount must be positive, got {}", accountNumber, amount);
-            throw new IllegalArgumentException("Deposit amount must be positive");
+            throw new IllegalArgumentException(StaticMessages.DEPOSIT_AMOUNT_POSITIVE);
         }
 
         String prefix = accountNumber.substring(0, 2);
@@ -130,19 +131,19 @@ public class ClientAccountService {
             requestedAcctType = AccountType.SAVINGS;
         } else {
             log.warn("Deposit rejected: unrecognized account number prefix {}", prefix);
-            throw new IllegalArgumentException("Unrecognized account number prefix: " + prefix);
+            throw new IllegalArgumentException(String.format(StaticMessages.UNRECOGNIZED_ACCOUNT_PREFIX, prefix));
         }
 
         if (requestedAcctType != depositForm.getAccountType()) {
             log.warn("Deposit rejected for account {}: requested type {} does not match account type {}",
                     accountNumber, depositForm.getAccountType(), requestedAcctType);
-            throw new IllegalArgumentException("Requested account type does not match account number");
+            throw new IllegalArgumentException(StaticMessages.ACCOUNT_TYPE_MISMATCH);
         }
 
         String depositType = depositForm.getDepositType();
         if (depositType != null && !depositType.equalsIgnoreCase("cash") && !depositType.equalsIgnoreCase("check")) {
             log.warn("Deposit rejected for account {}: invalid deposit type {}", accountNumber, depositType);
-            throw new IllegalArgumentException("Deposit type must be 'cash' or 'check'");
+            throw new IllegalArgumentException(StaticMessages.DEPOSIT_TYPE_INVALID);
         }
 
         log.info("Processing {} deposit of {} into {} account {}", depositType, amount, requestedAcctType, accountNumber);

@@ -7,6 +7,7 @@ import org.bee.banking.domain.Address;
 import org.bee.banking.domain.Customer;
 import org.bee.banking.exception.AccountNotFoundException;
 import org.bee.banking.exception.InsufficientFundsException;
+import org.bee.banking.messages.StaticMessages;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -87,7 +88,7 @@ public class AccountRepository {
             if (currentBalance == null || currentBalance.compareTo(amount) < 0) {
                 log.warn("Withdrawal of {} rejected for account {}: insufficient funds (balance {})",
                         amount, accountNumber, currentBalance);
-                throw new InsufficientFundsException("Insufficient funds in account " + accountNumber);
+                throw new InsufficientFundsException(String.format(StaticMessages.INSUFFICIENT_FUNDS, accountNumber));
             }
             if (accountType == AccountType.CHECKING) {
                 account.setCheckingBalance(currentBalance.subtract(amount));
@@ -98,7 +99,7 @@ public class AccountRepository {
         });
         if (updated == null) {
             log.warn("Withdrawal failed: account {} not found", accountNumber);
-            throw new AccountNotFoundException("Account not found: " + accountNumber);
+            throw new AccountNotFoundException(String.format(StaticMessages.ACCOUNT_NOT_FOUND, accountNumber));
         }
         log.info("Withdrew {} from {} account {}", amount, accountType, accountNumber);
         return updated;
@@ -121,7 +122,7 @@ public class AccountRepository {
         });
         if (updated == null) {
             log.warn("Deposit failed: account {} not found", accountNumber);
-            throw new AccountNotFoundException("Account not found: " + accountNumber);
+            throw new AccountNotFoundException(String.format(StaticMessages.ACCOUNT_NOT_FOUND, accountNumber));
         }
         log.info("Deposited {} into {} account {}", amount, accountType, accountNumber);
         return updated;

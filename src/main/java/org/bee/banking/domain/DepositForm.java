@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.bee.banking.messages.StaticMessages;
 
 import java.math.BigDecimal;
 @Data
@@ -18,31 +19,31 @@ public class DepositForm {
     String  depositType; // cash or check
 
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "[a-zA-Z]+$",message = "matches one or more letters, no spaces no special chars")
+    @Pattern(regexp = "[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY_NO_COMMA)
     String firstName;
 
     @Size(min = 1, max = 25)
-    @Pattern(regexp = "[a-zA-Z]+$",message = "matches one or more letters, no spaces ,no special chars")
+    @Pattern(regexp = "[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY_SPACE_COMMA)
     String lastName;
 
-    @NotBlank(message = "Street address is required")
+    @NotBlank(message = StaticMessages.VALIDATION_STREET_REQUIRED)
     private String street;
 
-    @NotBlank(message = "address line1 required.")
+    @NotBlank(message = StaticMessages.VALIDATION_DEPOSIT_ADDRESS_LINE1_REQUIRED)
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "^[a-zA-z0-9 .-_]+$",message = "Invalid characters in address line1")
+    @Pattern(regexp = "^[a-zA-z0-9 .-_]+$",message = StaticMessages.VALIDATION_DEPOSIT_ADDRESS_LINE1_INVALID_CHARS)
     private String addressLine1;
     @Pattern(regexp = "^[a-zA-Z0-9 ._-]+$")
     @Size(min = 0, max = 50)
     private String addressLine2;
 
-    @NotBlank(message = "City is required")
+    @NotBlank(message = StaticMessages.VALIDATION_CITY_REQUIRED)
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "^[a-zA-z0-9 .-]+$",message = "Invalid characters in city name")
+    @Pattern(regexp = "^[a-zA-z0-9 .-]+$",message = StaticMessages.VALIDATION_CITY_INVALID_CHARS)
     private String city;
 
-    @NotBlank(message = "State is required")
-    @Size(min = 2, max = 2, message = "State must be exactly 2 characters (e.g., TX)")
+    @NotBlank(message = StaticMessages.VALIDATION_STATE_REQUIRED)
+    @Size(min = 2, max = 2, message = StaticMessages.VALIDATION_STATE_LENGTH)
     private String state;
 
     /*
@@ -50,8 +51,8 @@ public class DepositForm {
     This implicitly matches the entire string. However, explicitly adding ^ (start of string) and $ (end of string)
     is a best practice in validation frameworks to guarantee no leading or trailing characters sneak past
      */
-    @NotBlank(message = "Zip code is required")
-    @Pattern(regexp = "^\\d{5}$",message ="zip code must be exactly 5 digits")
+    @NotBlank(message = StaticMessages.VALIDATION_ZIP_REQUIRED)
+    @Pattern(regexp = "^\\d{5}$",message = StaticMessages.VALIDATION_DEPOSIT_ZIP_PATTERN)
     private String zip;
 
 

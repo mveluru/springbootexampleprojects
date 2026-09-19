@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.bee.banking.domain.AccountType;
 import org.bee.banking.domain.Address;
+import org.bee.banking.messages.StaticMessages;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -27,24 +28,24 @@ public class WithdrawalRequest {
     String withdrawalStatus;
 
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "[a-zA-Z]+$",message = "matches one or more letters, no spaces no special chars")
+    @Pattern(regexp = "[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY_NO_COMMA)
     String firstName;
 
     @Size(min = 1, max = 25)
-    @Pattern(regexp = "[a-zA-Z]+$",message = "matches one or more letters, no spaces ,no special chars")
+    @Pattern(regexp = "[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY_SPACE_COMMA)
     String lastName;
 
-    @NotBlank(message = "Street address is required")
+    @NotBlank(message = StaticMessages.VALIDATION_STREET_REQUIRED)
     private String street;
 
-    @NotBlank(message = "City is required")
+    @NotBlank(message = StaticMessages.VALIDATION_CITY_REQUIRED)
     private String city;
 
-    @NotBlank(message = "State is required")
-    @Size(min = 2, max = 2, message = "State must be exactly 2 characters (e.g., TX)")
+    @NotBlank(message = StaticMessages.VALIDATION_STATE_REQUIRED)
+    @Size(min = 2, max = 2, message = StaticMessages.VALIDATION_STATE_LENGTH)
     private String state;
 
-    @NotBlank(message = "Zip code is required")
+    @NotBlank(message = StaticMessages.VALIDATION_ZIP_REQUIRED)
     private String zip;
 
     private String addressLine1;

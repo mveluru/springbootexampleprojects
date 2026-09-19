@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.bee.banking.messages.StaticMessages;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
 import java.io.Serializable;
@@ -16,17 +17,17 @@ import java.io.Serializable;
 public class Address implements Serializable {
     @NotBlank
     private String street;
-    @NotBlank(message = "City is required")
+    @NotBlank(message = StaticMessages.VALIDATION_CITY_REQUIRED)
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "^[a-zA-z0-9 .-]+$",message = "Invalid characters in city name")
+    @Pattern(regexp = "^[a-zA-z0-9 .-]+$",message = StaticMessages.VALIDATION_CITY_INVALID_CHARS)
     private String city;
     @NotBlank
-    @NotBlank(message = "State is required")
-    @Size(min = 2, max = 2, message = "State must be exactly 2 characters (e.g., TX)")
+    @NotBlank(message = StaticMessages.VALIDATION_STATE_REQUIRED)
+    @Size(min = 2, max = 2, message = StaticMessages.VALIDATION_STATE_LENGTH)
     private String state;
     @NotBlank
-    @Pattern(regexp = "^\\d{5}$",message = "Non negative numbers")
-    @NotBlank(message="Zip code is required")
+    @Pattern(regexp = "^\\d{5}$",message = StaticMessages.VALIDATION_ZIP_NON_NEGATIVE)
+    @NotBlank(message = StaticMessages.VALIDATION_ZIP_REQUIRED)
     private String zip;
     @Builder.Default
     private String country="USA";

@@ -61,4 +61,43 @@ public final class StaticMessages {
 
     // CustomerService log messages
     public static final String LOG_CUSTOMER_SAMPLE_RETURNED = "Returning sample customer record";
+
+    // Shared domain/request validation messages (Address, AccountRegistrationRequest,
+    // WithdrawalRequest, WithdrawalForm, DepositForm)
+    public static final String VALIDATION_STREET_REQUIRED = "Street address is required";
+    public static final String VALIDATION_CITY_REQUIRED = "City is required";
+    public static final String VALIDATION_CITY_INVALID_CHARS = "Invalid characters in city name";
+    public static final String VALIDATION_STATE_REQUIRED = "State is required";
+    public static final String VALIDATION_STATE_LENGTH = "State must be exactly 2 characters (e.g., TX)";
+    public static final String VALIDATION_ZIP_REQUIRED = "Zip code is required";
+
+    // AccountRegistrationRequest-specific validation messages
+    public static final String VALIDATION_FIRST_NAME_REQUIRED = "First name is required";
+    public static final String VALIDATION_FIRST_NAME_MAX_LENGTH = "First name cannot exceed 50 characters";
+    public static final String VALIDATION_LAST_NAME_REQUIRED = "Last name is required";
+    public static final String VALIDATION_LAST_NAME_MAX_LENGTH = "Last name cannot exceed 50 characters";
+    public static final String VALIDATION_DOB_REQUIRED = "Date of birth is required";
+    public static final String VALIDATION_ADDRESS_LINE1_REQUIRED = "Address line1 is required";
+    public static final String VALIDATION_ACCOUNT_TYPE_REQUIRED = "Account type is required";
+    public static final String VALIDATION_DOB_YEAR_MIN = "Year must be 1940 or later";
+
+    // Address-specific validation messages
+    public static final String VALIDATION_ZIP_NON_NEGATIVE = "Non negative numbers";
+
+    // DepositForm-specific validation messages
+    public static final String VALIDATION_DEPOSIT_ADDRESS_LINE1_REQUIRED = "address line1 required.";
+    public static final String VALIDATION_DEPOSIT_ADDRESS_LINE1_INVALID_CHARS = "Invalid characters in address line1";
+    public static final String VALIDATION_DEPOSIT_ZIP_PATTERN = "zip code must be exactly 5 digits";
+
+    // Customer-specific validation messages
+    public static final String VALIDATION_DOB_YEAR_1940 = "Date of birth must be from year 1940 onwards";
+
+    // "Letters only" name-pattern messages. Preserved verbatim per original call site
+    // (inconsistent punctuation predates this centralization) rather than merged, to
+    // avoid silently changing validation text.
+    public static final String VALIDATION_NAME_LETTERS_ONLY_SHORT = "no special chars"; // Customer.firstName
+    public static final String VALIDATION_NAME_LETTERS_ONLY_PROPER = "matches one or more letters, no spaces, no special chars"; // Customer.lastName
+    public static final String VALIDATION_NAME_LETTERS_ONLY_NO_COMMA = "matches one or more letters, no spaces no special chars"; // DepositForm.firstName, WithdrawalRequest.firstName
+    public static final String VALIDATION_NAME_LETTERS_ONLY_SPACE_COMMA = "matches one or more letters, no spaces ,no special chars"; // DepositForm.lastName, WithdrawalRequest.lastName, WithdrawalForm.lastName
+    public static final String VALIDATION_NAME_LETTERS_ONLY_COMMA_NO_SPACE = "matches one or more letters, no spaces,no special chars"; // WithdrawalForm.firstName
 }

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.bee.banking.messages.StaticMessages;
 import org.springframework.lang.NonNull;
 
 import java.io.Serializable;
@@ -17,10 +18,10 @@ import java.time.LocalDate;
 @Builder
 public class Customer implements Serializable {
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "[a-zA-Z]+$",message = "no special chars")
+    @Pattern(regexp = "[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY_SHORT)
     String firstName;
     @Size(min = 1, max = 25)
-    @Pattern(regexp = "[a-zA-Z]+$",message = "matches one or more letters, no spaces, no special chars")
+    @Pattern(regexp = "[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY_PROPER)
     String lastName;
     Address address;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "MM/dd/yyyy")
@@ -29,7 +30,7 @@ public class Customer implements Serializable {
 
 
     // The method name must start with "is" for the validator to pick it up automatically
-    @AssertTrue(message = "Date of birth must be from year 1940 onwards")
+    @AssertTrue(message = StaticMessages.VALIDATION_DOB_YEAR_1940)
     public boolean isDateOfBirthValid() {
         return dateOfBirth != null && dateOfBirth.getYear() >= 1940;
     }

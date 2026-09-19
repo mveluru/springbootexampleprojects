@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.bee.banking.messages.StaticMessages;
 import org.hibernate.validator.constraints.Range;
 
 import java.time.LocalDate;
@@ -18,43 +19,43 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccountRegistrationRequest {
-    @NotBlank(message = "First name is required")
-    @Size(max = 50, message = "First name cannot exceed 50 characters")
+    @NotBlank(message = StaticMessages.VALIDATION_FIRST_NAME_REQUIRED)
+    @Size(max = 50, message = StaticMessages.VALIDATION_FIRST_NAME_MAX_LENGTH)
     private String firstName;
 
-    @NotBlank(message = "Last name is required")
-    @Size(max = 50, message = "Last name cannot exceed 50 characters")
+    @NotBlank(message = StaticMessages.VALIDATION_LAST_NAME_REQUIRED)
+    @Size(max = 50, message = StaticMessages.VALIDATION_LAST_NAME_MAX_LENGTH)
     private String lastName;
 
-    @NotNull(message = "Date of birth is required")
+    @NotNull(message = StaticMessages.VALIDATION_DOB_REQUIRED)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "MM/dd/yyyy")
     private LocalDate dateOfBirth;
 
-    @NotBlank(message = "Street address is required")
+    @NotBlank(message = StaticMessages.VALIDATION_STREET_REQUIRED)
     private String street;
 
-    @NotBlank(message = "City is required")
+    @NotBlank(message = StaticMessages.VALIDATION_CITY_REQUIRED)
     private String city;
 
-    @NotBlank(message = "State is required")
-    @Size(min = 2, max = 2, message = "State must be exactly 2 characters (e.g., TX)")
+    @NotBlank(message = StaticMessages.VALIDATION_STATE_REQUIRED)
+    @Size(min = 2, max = 2, message = StaticMessages.VALIDATION_STATE_LENGTH)
     private String state;
 
-    @NotBlank(message = "Zip code is required")
+    @NotBlank(message = StaticMessages.VALIDATION_ZIP_REQUIRED)
     @Pattern(regexp = "\\d+")
     private String zip;
 
-    @NotBlank(message = "Address line1 is required")
-    @Size(min = 1, max = 50, message = "Address line1 is required")
+    @NotBlank(message = StaticMessages.VALIDATION_ADDRESS_LINE1_REQUIRED)
+    @Size(min = 1, max = 50, message = StaticMessages.VALIDATION_ADDRESS_LINE1_REQUIRED)
     private String addressLine1;
 
     private String addressLine2;
 
-    @NotBlank(message = "Account type is required")
+    @NotBlank(message = StaticMessages.VALIDATION_ACCOUNT_TYPE_REQUIRED)
     private String accountType; // Accepts raw text string like "checking" or "SAVINGS"
 
     // Custom helper method to enforce the 1940 cutoff rule automatically
-    @Range(min = 1940, max = 3000, message = "Year must be 1940 or later")
+    @Range(min = 1940, max = 3000, message = StaticMessages.VALIDATION_DOB_YEAR_MIN)
     public int getDateOfBirthYear() {
         return dateOfBirth != null ? dateOfBirth.getYear() : 1940;
     }

@@ -95,6 +95,27 @@ public class AccountRepository {
         return updated;
     }
 
+    /**
+     * Atomically credits the checking or savings balance under a single map operation,
+     * avoiding the lost-update race of a separate find + mutate + update sequence.
+     */
+    public Account deposit(String accountNumber, AccountType accountType, BigDecimal amount) {
+        Account updated = dbMockStore.computeIfPresent(accountNumber, (key, account) -> {
+            if (accountType == AccountType.CHECKING) {
+                BigDecimal currentBalance = account.getCheckingBalance() != null ? account.getCheckingBalance() : BigDecimal.ZERO;
+                account.setCheckingBalance(currentBalance.add(amount));
+            } else {
+                BigDecimal currentBalance = account.getSavingBalance() != null ? account.getSavingBalance() : BigDecimal.ZERO;
+                account.setSavingBalance(currentBalance.add(amount));
+            }
+            return account;
+        });
+        if (updated == null) {
+            throw new AccountNotFoundException("Account not found: " + accountNumber);
+        }
+        return updated;
+    }
+
 
     /**
      * Seeds dummy profiles ready for immediate lookup

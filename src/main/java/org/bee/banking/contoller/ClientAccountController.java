@@ -3,6 +3,7 @@ package org.bee.banking.contoller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.bee.banking.domain.Account;
+import org.bee.banking.domain.DepositForm;
 import org.bee.banking.request.AccountLookupRequest;
 import org.bee.banking.request.AccountRegistrationRequest;
 import org.bee.banking.request.WithdrawalRequest;
@@ -50,6 +51,16 @@ public class ClientAccountController {
     @PostMapping("/withdraw")
     public ResponseEntity<Account> withdraw(@Valid @RequestBody WithdrawalRequest request) {
         Account updatedAccount = accountService.withdrawAndSaveToAccount(request);
+        return ResponseEntity.ok(updatedAccount);
+    }
+
+    /**
+     * Scenario D: Deposit funds into an existing checking or savings account
+     * POST /api/accounts/deposit
+     */
+    @PostMapping("/deposit")
+    public ResponseEntity<Account> deposit(@Valid @RequestBody DepositForm request) {
+        Account updatedAccount = accountService.depositAndSaveToAccount(request);
         return ResponseEntity.ok(updatedAccount);
     }
 }

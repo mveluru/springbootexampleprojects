@@ -10,11 +10,12 @@ A Spring Boot 3 REST application demonstrating configuration properties binding 
 - **Orders Config API**: Exposes endpoints under `/v1/orders` to query live application, email, and SMS configurations.
 - **Product Catalog API**: Exposes endpoints under `/v1/product` to list, look up, and add products (in-memory catalog).
 - **Banking APIs**: Client/account lookup, registration, withdrawal, and deposit (`/v1/client`, `/v1/api/accounts`) — withdrawals and deposits are applied atomically per account and withdrawals are recorded to an in-memory history — plus async notification demos (`/notify`, `/report`) backed by `@Async`.
+- **Resilience Demo**: `/v1/payment/process` demonstrates a Resilience4j circuit breaker with jittered exponential-backoff retry around a simulated flaky downstream call.
 - **Event Ingestion**: `/api/events` accepts versioned event payloads validated against a JSON Schema (`event-v1.json`) and persisted via Spring Data JPA.
 - **API Versioning Demo**: `/apiversion` illustrates URI-, query-param-, header-, and content-negotiation-based API versioning strategies.
 - **Actuator Monitoring**: Integrated Spring Boot Actuator exposing health status under `/actuator/health`.
-- **Global Exception Handling**: Centralized exception handling using `@ControllerAdvice`, with exception messages centralized in `StaticMessages`.
-- **Structured Logging**: Slf4j logging across the banking module — info logs for successful operations, warn logs for validation/business rejections (insufficient funds, account not found, etc.).
+- **Global Exception Handling**: Centralized exception handling using `@ControllerAdvice`, with all exception and validation messages centralized in `StaticMessages`.
+- **Structured Logging**: Slf4j logging across the banking module — info logs for successful operations, warn logs for validation/business rejections (insufficient funds, account not found, etc.) — with log message templates also centralized in `StaticMessages`.
 - **Database Integration**: MySQL datasource integration with Hibernate / Spring Data JPA.
 
 ---
@@ -52,6 +53,25 @@ spring:
     url: jdbc:mysql://localhost:3306/db_example?useSSL=false
     username: root
     password: <password>
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      bankService:
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 5s
+        permittedNumberOfCallsInHalfOpenState: 3
+  retry:
+    instances:
+      bankService:
+        maxAttempts: 3
+        waitDuration: 500ms
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        enableRandomizedWait: true   # adds jitter to the backoff
+        randomizedWaitFactor: 0.5
 ```
 
 ---
@@ -88,6 +108,12 @@ All REST endpoints are prefixed with `http://localhost:8081/brite`:
 | `POST` | `/v1/api/accounts/deposit` | Deposits funds into a checking/savings account; `400` on invalid amount/deposit type or mismatched account type, `404` if the account doesn't exist |
 | `GET` | `/notify?name={name}` | Fire-and-forget async email notification demo |
 | `GET` | `/report` | Async task that returns a completed report string |
+
+### Resilience demo — `/v1/payment`
+
+| Method | Endpoint Path | Description |
+| :--- | :--- | :--- |
+| `POST` | `/v1/payment/process` | Calls a simulated flaky bank service (40% failure rate) through a Resilience4j circuit breaker + jittered exponential-backoff retry; returns a fallback message once the breaker opens |
 
 ### Event ingestion — `/api/events`
 
@@ -201,6 +227,9 @@ curl -s -X POST http://localhost:8081/brite/v1/api/accounts/deposit \
 
 # Trigger a Fire-and-Forget Async Notification
 curl -s "http://localhost:8081/brite/notify?name=Alice"
+
+# Call the Resilience4j Circuit Breaker + Retry Demo (run a few times to see variation)
+curl -s -X POST http://localhost:8081/brite/v1/payment/process
 
 # Submit a v1 Event
 curl -s -X POST http://localhost:8081/brite/api/events \

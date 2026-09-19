@@ -49,7 +49,7 @@ public class AccountRepository {
                 account.setSavingAccountNumber(generatedNum);
                 account.setSavingBalance(BigDecimal.ZERO);
             }
-            log.info("Generated new {} account number {}", account.getAccountType(), generatedNum);
+            log.info(StaticMessages.LOG_ACCOUNT_NUMBER_GENERATED, account.getAccountType(), generatedNum);
         }
 
         // Index under whichever account number is active
@@ -60,7 +60,7 @@ public class AccountRepository {
             dbMockStore.put(account.getSavingAccountNumber(), account);
         }
 
-        log.info("Saved account {}", account.getCheckingAccountNumber() != null
+        log.info(StaticMessages.LOG_ACCOUNT_SAVED, account.getCheckingAccountNumber() != null
                 ? account.getCheckingAccountNumber() : account.getSavingAccountNumber());
         return account;
     }
@@ -72,7 +72,7 @@ public class AccountRepository {
         if (account.getSavingAccountNumber() != null) {
             dbMockStore.put(account.getSavingAccountNumber(), account);
         }
-        log.debug("Updated account {}", account.getCheckingAccountNumber() != null
+        log.debug(StaticMessages.LOG_ACCOUNT_UPDATED, account.getCheckingAccountNumber() != null
                 ? account.getCheckingAccountNumber() : account.getSavingAccountNumber());
     }
 
@@ -86,8 +86,7 @@ public class AccountRepository {
                     ? account.getCheckingBalance()
                     : account.getSavingBalance();
             if (currentBalance == null || currentBalance.compareTo(amount) < 0) {
-                log.warn("Withdrawal of {} rejected for account {}: insufficient funds (balance {})",
-                        amount, accountNumber, currentBalance);
+                log.warn(StaticMessages.LOG_WITHDRAWAL_INSUFFICIENT_FUNDS, amount, accountNumber, currentBalance);
                 throw new InsufficientFundsException(String.format(StaticMessages.INSUFFICIENT_FUNDS, accountNumber));
             }
             if (accountType == AccountType.CHECKING) {
@@ -98,10 +97,10 @@ public class AccountRepository {
             return account;
         });
         if (updated == null) {
-            log.warn("Withdrawal failed: account {} not found", accountNumber);
+            log.warn(StaticMessages.LOG_WITHDRAWAL_ACCOUNT_NOT_FOUND, accountNumber);
             throw new AccountNotFoundException(String.format(StaticMessages.ACCOUNT_NOT_FOUND, accountNumber));
         }
-        log.info("Withdrew {} from {} account {}", amount, accountType, accountNumber);
+        log.info(StaticMessages.LOG_WITHDRAWAL_SUCCESS, amount, accountType, accountNumber);
         return updated;
     }
 
@@ -121,10 +120,10 @@ public class AccountRepository {
             return account;
         });
         if (updated == null) {
-            log.warn("Deposit failed: account {} not found", accountNumber);
+            log.warn(StaticMessages.LOG_DEPOSIT_ACCOUNT_NOT_FOUND, accountNumber);
             throw new AccountNotFoundException(String.format(StaticMessages.ACCOUNT_NOT_FOUND, accountNumber));
         }
-        log.info("Deposited {} into {} account {}", amount, accountType, accountNumber);
+        log.info(StaticMessages.LOG_DEPOSIT_SUCCESS, amount, accountType, accountNumber);
         return updated;
     }
 

@@ -3,6 +3,7 @@ package org.bee.banking.service;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.bee.banking.component.BankClient;
+import org.bee.banking.messages.StaticMessages;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -19,12 +20,12 @@ public class PaymentService {
                 fallbackMethod = "paymentFallback"
         )
         public String processPayment() {
-            log.debug("Processing payment via BankClient");
+            log.debug(StaticMessages.LOG_PAYMENT_PROCESSING);
             return bankClient.processPayment();
         }
 
         public String paymentFallback(Throwable ex) {
-            log.warn("Payment circuit breaker fallback triggered: {}", ex.getMessage());
+            log.warn(StaticMessages.LOG_PAYMENT_FALLBACK_TRIGGERED, ex.getMessage());
             return "Payment service temporarily unavailable";
         }
 

@@ -10,8 +10,9 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class AccountConstraints {
 
-    BigDecimal maximumDepositAmountByCash; // property value
+    BigDecimal maximumDepositAmountByCash; // property value MaxProperty $5000.00 per year
     String Age ;// to create account , deposit   age should be greater than 18
     BigDecimal checkingMinimumBalance; // property value
-    BigDecimal savingMaximumBalance; // property value
+    BigDecimal savingMinimumBalance;  // Property Value
+    String bankStatementMaxMonthsRange;// Less than or equal to 18 - property value
 }

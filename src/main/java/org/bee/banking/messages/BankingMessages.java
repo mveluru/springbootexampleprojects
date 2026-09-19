@@ -25,7 +25,7 @@ public final class BankingMessages {
     public static final String LOG_DEPOSIT_ACCOUNT_NOT_FOUND = "Deposit failed: account {} not found";
     public static final String LOG_DEPOSIT_SUCCESS = "Deposited {} into {} account {}";
 
-    // WithdrawalRespository log messages
+    // WithdrawalRepository log messages
     public static final String LOG_WITHDRAWAL_HISTORY_RECORDED = "Recorded withdrawal history entry for account {}: amount={}, status={}";
 
     // ClientAccountService log messages

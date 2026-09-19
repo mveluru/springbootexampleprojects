@@ -15,7 +15,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Getter
 @Slf4j
 @Repository
-public class WithdrawalRespository {
+public class WithdrawalRepository {
     private final Map<String, List<WithdrawalForm>> WithDrawalHistory = new ConcurrentHashMap<>();
 
     public void createWithdrawal(WithdrawalForm withdrawalForm) {

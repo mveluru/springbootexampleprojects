@@ -9,7 +9,7 @@ import org.bee.banking.domain.AccountType;
 import org.bee.banking.domain.DepositForm;
 import org.bee.banking.domain.WithdrawalForm;
 import org.bee.banking.messages.BankingMessages;
-import org.bee.banking.repository.WithdrawalRespository;
+import org.bee.banking.repository.WithdrawalRepository;
 import org.bee.banking.request.AccountLookupRequest;
 import org.bee.banking.repository.AccountRepository;
 import org.bee.banking.request.AccountRegistrationRequest;
@@ -28,7 +28,7 @@ public class ClientAccountService {
     private final AccountRepository accountRepository;
     private final AccountMapper accountMapper;
     private final WithdrawalMapper withdrawalMapper;
-    private final WithdrawalRespository withdrawalRespository;
+    private final WithdrawalRepository withdrawalRespository;
 
     /**
      * Flow A: Look up consumer account details

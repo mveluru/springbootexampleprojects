@@ -39,7 +39,7 @@ public class DepositForm {
 
     @NotBlank(message = StaticMessages.VALIDATION_CITY_REQUIRED)
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "^[a-zA-z0-9 .-]$",message = StaticMessages.VALIDATION_CITY_INVALID_CHARS)
+    @Pattern(regexp = "^[a-zA-z0-9 .-]+$",message = StaticMessages.VALIDATION_CITY_INVALID_CHARS)
     private String city;
 
     @NotBlank(message = StaticMessages.VALIDATION_STATE_REQUIRED)

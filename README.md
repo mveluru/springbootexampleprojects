@@ -9,7 +9,7 @@ A Spring Boot 3 REST application demonstrating configuration properties binding 
 - **Configuration Management**: Strongly-typed properties bound via `@ConfigurationProperties` for notification options (App, Email, SMS, Retry).
 - **Orders Config API**: Exposes endpoints under `/v1/orders` to query live application, email, and SMS configurations.
 - **Product Catalog API**: Exposes endpoints under `/v1/product` to list, look up, and add products (in-memory catalog).
-- **Banking APIs**: Client/account lookup and registration (`/v1/client`, `/v1/api/accounts`) plus async notification demos (`/notify`, `/report`) backed by `@Async`.
+- **Banking APIs**: Client/account lookup, registration, withdrawal, and deposit (`/v1/client`, `/v1/api/accounts`) — withdrawals and deposits are applied atomically per account and withdrawals are recorded to an in-memory history — plus async notification demos (`/notify`, `/report`) backed by `@Async`.
 - **Event Ingestion**: `/api/events` accepts versioned event payloads validated against a JSON Schema (`event-v1.json`) and persisted via Spring Data JPA.
 - **API Versioning Demo**: `/apiversion` illustrates URI-, query-param-, header-, and content-negotiation-based API versioning strategies.
 - **Actuator Monitoring**: Integrated Spring Boot Actuator exposing health status under `/actuator/health`.
@@ -83,6 +83,8 @@ All REST endpoints are prefixed with `http://localhost:8081/brite`:
 | `GET` | `/v1/client/name` | Returns a sample customer record |
 | `POST` | `/v1/api/accounts/lookup` | Looks up an account by account number; `404` if not found |
 | `POST` | `/v1/api/accounts/register` | Registers a new customer + account |
+| `POST` | `/v1/api/accounts/withdraw` | Withdraws funds from a checking/savings account; `400` on insufficient funds or mismatched account type, `404` if the account doesn't exist |
+| `POST` | `/v1/api/accounts/deposit` | Deposits funds into a checking/savings account; `400` on invalid amount/deposit type or mismatched account type, `404` if the account doesn't exist |
 | `GET` | `/notify?name={name}` | Fire-and-forget async email notification demo |
 | `GET` | `/report` | Async task that returns a completed report string |
 
@@ -176,6 +178,24 @@ curl -s -X POST http://localhost:8081/brite/v1/api/accounts/register \
         "firstName":"David","lastName":"Miller","dateOfBirth":"08/19/1994",
         "street":"789 Pine Rd","city":"Houston","state":"TX","zip":"77001",
         "accountType":"CHECKING"
+      }'
+
+# Withdraw From a Client Account
+curl -s -X POST http://localhost:8081/brite/v1/api/accounts/withdraw \
+  -H "Content-Type: application/json" \
+  -d '{
+        "accountNumber":"CH-88291","accountType":"CHECKING","withdrawAmount":100.00,
+        "firstName":"Alice","lastName":"Smith","street":"123 Main St","city":"Austin",
+        "state":"TX","zip":"78701","addressLine1":"Apt 4B"
+      }'
+
+# Deposit Into a Client Account
+curl -s -X POST http://localhost:8081/brite/v1/api/accounts/deposit \
+  -H "Content-Type: application/json" \
+  -d '{
+        "accountNumber":"CH-88291","amount":250.00,"accountType":"CHECKING","depositType":"cash",
+        "firstName":"Alice","lastName":"Smith","street":"123 Main St","city":"Austin",
+        "state":"TX","zip":"78701","addressLine1":"Apt 4B"
       }'
 
 # Trigger a Fire-and-Forget Async Notification

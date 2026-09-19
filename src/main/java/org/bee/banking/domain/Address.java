@@ -19,16 +19,15 @@ public class Address implements Serializable {
     private String city;
     private String state;
     @NotBlank
-    @Pattern(regexp = "[\\d+]]",message = "Non negative numbers")
-    @Size(min = 5, max = 5)
-    @Pattern(regexp = "\\d+")
+    @Pattern(regexp = "^\\d{5}$",message = "Non negative numbers")
+    @NotBlank(message="Zip code is required")
     private String zip;
     @Builder.Default
     private String country="USA";
     @NotBlank
     @Size(min = 1, max = 50)
     private String addressLine1;
-    @Size(min = 1, max = 50)
+    @Size(min = 0, max = 50)
     private String addressLine2;
 
 

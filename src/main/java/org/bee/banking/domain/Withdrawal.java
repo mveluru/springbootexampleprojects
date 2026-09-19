@@ -29,6 +29,7 @@ public class Withdrawal {
     @Size(min = 1, max = 25)
     @Pattern(regexp = "[a-zA-Z]+$",message = "matches one or more letters, no spaces ,no special chars")
     String lastName;
+
     Address address;
 
 

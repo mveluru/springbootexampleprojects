@@ -13,7 +13,7 @@ import java.time.LocalDate;
 
 @AllArgsConstructor
 @Data
-public class Withdrawal {
+public class WithdrawalForm {
 
     String AccountNumber;
     @Enumerated(EnumType.STRING)

@@ -1,7 +1,7 @@
 package org.bee.banking.component;
 
 import org.bee.banking.domain.Address;
-import org.bee.banking.domain.Withdrawal;
+import org.bee.banking.domain.WithdrawalForm;
 import org.bee.banking.request.WithdrawalRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -17,7 +17,7 @@ public interface WithdrawalMapper {
     @Mapping(target = "withdrawalStatus", ignore = true) // set by business logic on processing
     @Mapping(target = "withdrawalDate", ignore = true) // keep entity's LocalDate.now() default
     @Mapping(target = "address", source = "request")
-    Withdrawal toWithdrawalEntity(WithdrawalRequest request);
+    WithdrawalForm toWithdrawalEntity(WithdrawalRequest request);
 
 
     @Mapping(target = "street", source = "street")

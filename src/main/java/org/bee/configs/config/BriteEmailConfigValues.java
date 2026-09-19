@@ -1,11 +1,11 @@
-package org.bee.orders.config;
+package org.bee.configs.config;
 
 import lombok.Getter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "notification.email")
 @Getter
-public class BriteOrderEmailConfigValues {
+public class BriteEmailConfigValues {
     private boolean enabled;
     private String fromAddress;
     private String supportAddress;

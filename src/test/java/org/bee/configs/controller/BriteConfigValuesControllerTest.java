@@ -1,4 +1,4 @@
-package org.bee.orders.controller;
+package org.bee.configs.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,14 +13,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class BriteOrdersViewConfigValuesTest {
+class BriteConfigValuesControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @Test
     void appConfigValues_returnsConfiguredValues() throws Exception {
-        mockMvc.perform(get("/v1/orders/app-config/values"))
+        mockMvc.perform(get("/v1/configs/app-config/values"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.connectionPoolSize").value("10"))
@@ -29,7 +29,7 @@ class BriteOrdersViewConfigValuesTest {
 
     @Test
     void emailConfigValues_returnsConfiguredValues() throws Exception {
-        mockMvc.perform(get("/v1/orders/email-config/values"))
+        mockMvc.perform(get("/v1/configs/email-config/values"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.enabled").value("true"))
@@ -40,7 +40,7 @@ class BriteOrdersViewConfigValuesTest {
 
     @Test
     void smsConfigValues_returnsConfiguredValues() throws Exception {
-        mockMvc.perform(get("/v1/orders/sms-confi/values"))
+        mockMvc.perform(get("/v1/configs/sms-config/values"))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.enabled").value("false"))

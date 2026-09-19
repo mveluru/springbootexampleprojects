@@ -1,5 +1,6 @@
 package org.bee.banking.rules;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,7 @@ import java.math.BigDecimal;
 @Data
 @Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class AccountConstraints {
 
     BigDecimal maximumDepositAmountByCash; // property value MaxProperty $5000.00 per year

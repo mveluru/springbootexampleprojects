@@ -7,7 +7,7 @@ A Spring Boot 3 REST application demonstrating configuration properties binding 
 ## 🚀 Features
 
 - **Configuration Management**: Strongly-typed properties bound via `@ConfigurationProperties` for notification options (App, Email, SMS, Retry).
-- **Orders Config API**: Exposes endpoints under `/v1/orders` to query live application, email, and SMS configurations.
+- **Configs API**: Exposes endpoints under `/v1/configs` to query live application, email, and SMS configurations.
 - **Product Catalog API**: Exposes endpoints under `/v1/product` to list, look up, and add products (in-memory catalog).
 - **Banking APIs**: Client/account lookup, registration, withdrawal, and deposit (`/v1/client`, `/v1/api/accounts`) — withdrawals and deposits are applied atomically per account and withdrawals are recorded to an in-memory history — plus async notification demos (`/notify`, `/report`) backed by `@Async`.
 - **Resilience Demo**: `/v1/payment/process` demonstrates a Resilience4j circuit breaker with jittered exponential-backoff retry around a simulated flaky downstream call.
@@ -80,13 +80,13 @@ resilience4j:
 
 All REST endpoints are prefixed with `http://localhost:8081/brite`:
 
-### Orders config — `/v1/orders`
+### Configs — `/v1/configs`
 
 | Method | Endpoint Path | Description |
 | :--- | :--- | :--- |
-| `GET` | `/v1/orders/app-config/values` | Returns application connection pool size and timeout settings |
-| `GET` | `/v1/orders/email-config/values` | Returns email notification configuration values |
-| `GET` | `/v1/orders/sms-confi/values` | Returns SMS notification configuration values |
+| `GET` | `/v1/configs/app-config/values` | Returns application connection pool size and timeout settings |
+| `GET` | `/v1/configs/email-config/values` | Returns email notification configuration values |
+| `GET` | `/v1/configs/sms-config/values` | Returns SMS notification configuration values |
 
 ### Product catalog — `/v1/product`
 
@@ -171,13 +171,13 @@ mvn spring-boot:run
 
 ```bash
 # Get Application Config
-curl -s http://localhost:8081/brite/v1/orders/app-config/values
+curl -s http://localhost:8081/brite/v1/configs/app-config/values
 
 # Get Email Config
-curl -s http://localhost:8081/brite/v1/orders/email-config/values
+curl -s http://localhost:8081/brite/v1/configs/email-config/values
 
 # Get SMS Config
-curl -s http://localhost:8081/brite/v1/orders/sms-confi/values
+curl -s http://localhost:8081/brite/v1/configs/sms-config/values
 
 # Check Actuator Health
 curl -s http://localhost:8081/brite/actuator/health
@@ -266,5 +266,5 @@ mvn test
 | Test Class | Covers |
 | :--- | :--- |
 | `ProductControllerTest` | `/v1/product` endpoints — list, get by ID (found + `404` not-found), add, product message |
-| `BriteOrdersViewConfigValuesTest` | `/v1/orders` config endpoints — app, email, SMS |
+| `BriteConfigValuesControllerTest` | `/v1/configs` config endpoints — app, email, SMS |
 | `SpringBootProjectsApplicationTests` | Application context load + actuator health |

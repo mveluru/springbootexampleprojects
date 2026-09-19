@@ -1,6 +1,6 @@
 package org.bee.retail.controller;
 
-import org.bee.orders.SpringBootProjectsApplication;
+import org.bee.configs.SpringBootProjectsApplication;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

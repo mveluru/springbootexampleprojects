@@ -3,7 +3,7 @@ package org.bee.banking.repository;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.bee.banking.domain.WithdrawalForm;
-import org.bee.banking.messages.StaticMessages;
+import org.bee.banking.messages.BankingMessages;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
 
@@ -23,7 +23,7 @@ public class WithdrawalRespository {
         WithDrawalHistory
                 .computeIfAbsent(withdrawalForm.getAccountNumber(), key -> new CopyOnWriteArrayList<>())
                 .add(withdrawalForm);
-        log.info(StaticMessages.LOG_WITHDRAWAL_HISTORY_RECORDED,
+        log.info(BankingMessages.LOG_WITHDRAWAL_HISTORY_RECORDED,
                 withdrawalForm.getAccountNumber(), withdrawalForm.getWithdrawalAmount(), withdrawalForm.getWithdrawalStatus());
     }
 }

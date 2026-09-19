@@ -14,8 +14,8 @@ A Spring Boot 3 REST application demonstrating configuration properties binding 
 - **Event Ingestion**: `/api/events` accepts versioned event payloads validated against a JSON Schema (`event-v1.json`) and persisted via Spring Data JPA.
 - **API Versioning Demo**: `/apiversion` illustrates URI-, query-param-, header-, and content-negotiation-based API versioning strategies.
 - **Actuator Monitoring**: Integrated Spring Boot Actuator exposing health status under `/actuator/health`.
-- **Global Exception Handling**: Centralized exception handling using `@ControllerAdvice`, with all exception and validation messages centralized in `StaticMessages`.
-- **Structured Logging**: Slf4j logging across the banking module — info logs for successful operations, warn logs for validation/business rejections (insufficient funds, account not found, etc.) — with log message templates also centralized in `StaticMessages`.
+- **Global Exception Handling**: Centralized exception handling using `@ControllerAdvice`, with all exception and validation messages centralized in `BankingMessages`.
+- **Structured Logging**: Slf4j logging across the banking module — info logs for successful operations, warn logs for validation/business rejections (insufficient funds, account not found, etc.) — with log message templates also centralized in `BankingMessages`.
 - **Database Integration**: MySQL datasource integration with Hibernate / Spring Data JPA.
 
 ---

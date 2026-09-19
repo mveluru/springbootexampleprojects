@@ -7,7 +7,7 @@ import org.bee.banking.domain.Address;
 import org.bee.banking.domain.Customer;
 import org.bee.banking.exception.AccountNotFoundException;
 import org.bee.banking.exception.InsufficientFundsException;
-import org.bee.banking.messages.StaticMessages;
+import org.bee.banking.messages.BankingMessages;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -49,7 +49,7 @@ public class AccountRepository {
                 account.setSavingAccountNumber(generatedNum);
                 account.setSavingBalance(BigDecimal.ZERO);
             }
-            log.info(StaticMessages.LOG_ACCOUNT_NUMBER_GENERATED, account.getAccountType(), generatedNum);
+            log.info(BankingMessages.LOG_ACCOUNT_NUMBER_GENERATED, account.getAccountType(), generatedNum);
         }
 
         // Index under whichever account number is active
@@ -60,7 +60,7 @@ public class AccountRepository {
             dbMockStore.put(account.getSavingAccountNumber(), account);
         }
 
-        log.info(StaticMessages.LOG_ACCOUNT_SAVED, account.getCheckingAccountNumber() != null
+        log.info(BankingMessages.LOG_ACCOUNT_SAVED, account.getCheckingAccountNumber() != null
                 ? account.getCheckingAccountNumber() : account.getSavingAccountNumber());
         return account;
     }
@@ -72,7 +72,7 @@ public class AccountRepository {
         if (account.getSavingAccountNumber() != null) {
             dbMockStore.put(account.getSavingAccountNumber(), account);
         }
-        log.debug(StaticMessages.LOG_ACCOUNT_UPDATED, account.getCheckingAccountNumber() != null
+        log.debug(BankingMessages.LOG_ACCOUNT_UPDATED, account.getCheckingAccountNumber() != null
                 ? account.getCheckingAccountNumber() : account.getSavingAccountNumber());
     }
 
@@ -86,8 +86,8 @@ public class AccountRepository {
                     ? account.getCheckingBalance()
                     : account.getSavingBalance();
             if (currentBalance == null || currentBalance.compareTo(amount) < 0) {
-                log.warn(StaticMessages.LOG_WITHDRAWAL_INSUFFICIENT_FUNDS, amount, accountNumber, currentBalance);
-                throw new InsufficientFundsException(String.format(StaticMessages.INSUFFICIENT_FUNDS, accountNumber));
+                log.warn(BankingMessages.LOG_WITHDRAWAL_INSUFFICIENT_FUNDS, amount, accountNumber, currentBalance);
+                throw new InsufficientFundsException(String.format(BankingMessages.INSUFFICIENT_FUNDS, accountNumber));
             }
             if (accountType == AccountType.CHECKING) {
                 account.setCheckingBalance(currentBalance.subtract(amount));
@@ -97,10 +97,10 @@ public class AccountRepository {
             return account;
         });
         if (updated == null) {
-            log.warn(StaticMessages.LOG_WITHDRAWAL_ACCOUNT_NOT_FOUND, accountNumber);
-            throw new AccountNotFoundException(String.format(StaticMessages.ACCOUNT_NOT_FOUND, accountNumber));
+            log.warn(BankingMessages.LOG_WITHDRAWAL_ACCOUNT_NOT_FOUND, accountNumber);
+            throw new AccountNotFoundException(String.format(BankingMessages.ACCOUNT_NOT_FOUND, accountNumber));
         }
-        log.info(StaticMessages.LOG_WITHDRAWAL_SUCCESS, amount, accountType, accountNumber);
+        log.info(BankingMessages.LOG_WITHDRAWAL_SUCCESS, amount, accountType, accountNumber);
         return updated;
     }
 
@@ -120,10 +120,10 @@ public class AccountRepository {
             return account;
         });
         if (updated == null) {
-            log.warn(StaticMessages.LOG_DEPOSIT_ACCOUNT_NOT_FOUND, accountNumber);
-            throw new AccountNotFoundException(String.format(StaticMessages.ACCOUNT_NOT_FOUND, accountNumber));
+            log.warn(BankingMessages.LOG_DEPOSIT_ACCOUNT_NOT_FOUND, accountNumber);
+            throw new AccountNotFoundException(String.format(BankingMessages.ACCOUNT_NOT_FOUND, accountNumber));
         }
-        log.info(StaticMessages.LOG_DEPOSIT_SUCCESS, amount, accountType, accountNumber);
+        log.info(BankingMessages.LOG_DEPOSIT_SUCCESS, amount, accountType, accountNumber);
         return updated;
     }
 

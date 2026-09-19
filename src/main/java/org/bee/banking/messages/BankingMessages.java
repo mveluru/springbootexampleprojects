@@ -1,8 +1,8 @@
 package org.bee.banking.messages;
 
-public final class StaticMessages {
+public final class BankingMessages {
 
-    private StaticMessages() {
+    private BankingMessages() {
     }
 
     // Exception messages (String.format-style, %s placeholders)

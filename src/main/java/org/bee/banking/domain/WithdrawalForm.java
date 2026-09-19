@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.bee.banking.messages.StaticMessages;
+import org.bee.banking.messages.BankingMessages;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -25,10 +25,10 @@ public class WithdrawalForm {
     String withdrawalStatus;// Completed , Rejected
 
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "^[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY)
+    @Pattern(regexp = "^[a-zA-Z]+$",message = BankingMessages.VALIDATION_NAME_LETTERS_ONLY)
     String firstName;
     @Size(min = 1, max = 25)
-    @Pattern(regexp = "^[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY)
+    @Pattern(regexp = "^[a-zA-Z]+$",message = BankingMessages.VALIDATION_NAME_LETTERS_ONLY)
     String lastName;
 
     Address address;

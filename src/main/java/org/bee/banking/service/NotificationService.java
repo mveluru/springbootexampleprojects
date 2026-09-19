@@ -1,7 +1,7 @@
 package org.bee.banking.service;
 
 import lombok.extern.slf4j.Slf4j;
-import org.bee.banking.messages.StaticMessages;
+import org.bee.banking.messages.BankingMessages;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -16,10 +16,10 @@ public class NotificationService {
     public void sendEmail(String user) {
         try {
             Thread.sleep(3000); // Simulate 3-second delay
-            log.info(StaticMessages.LOG_EMAIL_SENT, user, Thread.currentThread().getName());
+            log.info(BankingMessages.LOG_EMAIL_SENT, user, Thread.currentThread().getName());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.warn(StaticMessages.LOG_EMAIL_INTERRUPTED, user);
+            log.warn(BankingMessages.LOG_EMAIL_INTERRUPTED, user);
         }
     }
 
@@ -30,9 +30,9 @@ public class NotificationService {
             Thread.sleep(2000); // Simulate delay
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.warn(StaticMessages.LOG_REPORT_INTERRUPTED);
+            log.warn(BankingMessages.LOG_REPORT_INTERRUPTED);
         }
-        log.info(StaticMessages.LOG_REPORT_GENERATED);
+        log.info(BankingMessages.LOG_REPORT_GENERATED);
         return CompletableFuture.completedFuture("Report generated successfully!");
     }
 }

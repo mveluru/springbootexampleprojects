@@ -4,7 +4,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
 import org.bee.banking.component.BankClient;
-import org.bee.banking.messages.StaticMessages;
+import org.bee.banking.messages.BankingMessages;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -26,12 +26,12 @@ public class PaymentService {
         )
         @CircuitBreaker(name = "bankService")
         public String processPayment() {
-            log.debug(StaticMessages.LOG_PAYMENT_PROCESSING);
+            log.debug(BankingMessages.LOG_PAYMENT_PROCESSING);
             return bankClient.processPayment();
         }
 
         public String paymentFallback(Throwable ex) {
-            log.warn(StaticMessages.LOG_PAYMENT_FALLBACK_TRIGGERED, ex.getMessage());
+            log.warn(BankingMessages.LOG_PAYMENT_FALLBACK_TRIGGERED, ex.getMessage());
             return "Payment service temporarily unavailable";
         }
 

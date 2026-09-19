@@ -1,6 +1,7 @@
 package org.bee.banking.repository;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.bee.banking.domain.WithdrawalForm;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.Assert;
@@ -11,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Getter
+@Slf4j
 @Repository
 public class WithdrawalRespository {
     private final Map<String, List<WithdrawalForm>> WithDrawalHistory = new ConcurrentHashMap<>();
@@ -20,5 +22,7 @@ public class WithdrawalRespository {
         WithDrawalHistory
                 .computeIfAbsent(withdrawalForm.getAccountNumber(), key -> new CopyOnWriteArrayList<>())
                 .add(withdrawalForm);
+        log.info("Recorded withdrawal history entry for account {}: amount={}, status={}",
+                withdrawalForm.getAccountNumber(), withdrawalForm.getWithdrawalAmount(), withdrawalForm.getWithdrawalStatus());
     }
 }

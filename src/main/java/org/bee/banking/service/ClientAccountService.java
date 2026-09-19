@@ -1,6 +1,7 @@
 package org.bee.banking.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.bee.banking.component.AccountMapper;
 import org.bee.banking.component.WithdrawalMapper;
 import org.bee.banking.domain.Account;
@@ -20,6 +21,7 @@ import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class ClientAccountService {
     private final AccountRepository accountRepository;
@@ -31,7 +33,12 @@ public class ClientAccountService {
      * Flow A: Look up consumer account details
      */
     public Optional<Account> lookupAccountDetails(AccountLookupRequest request) {
-        return accountRepository.findByAccountNumber(request.getAccountNumber());
+        log.debug("Looking up account {}", request.getAccountNumber());
+        Optional<Account> account = accountRepository.findByAccountNumber(request.getAccountNumber());
+        if (account.isEmpty()) {
+            log.warn("Account lookup failed: {} not found", request.getAccountNumber());
+        }
+        return account;
     }
 
     /**
@@ -42,7 +49,11 @@ public class ClientAccountService {
         Account newAccountEntity = accountMapper.toAccountEntity(request);
 
         // Commits layout back into our static map structure
-        return accountRepository.save(newAccountEntity);
+        Account savedAccount = accountRepository.save(newAccountEntity);
+        log.info("Registered new {} account {}", savedAccount.getAccountType(),
+                savedAccount.getCheckingAccountNumber() != null
+                        ? savedAccount.getCheckingAccountNumber() : savedAccount.getSavingAccountNumber());
+        return savedAccount;
     }
 
     @Transactional
@@ -51,9 +62,11 @@ public class ClientAccountService {
         BigDecimal withdrawAmount = withdrawalRequest.getWithdrawAmount();
 
         if (accountNumber == null || accountNumber.length() < 2) {
+            log.warn("Withdrawal rejected: missing/malformed account number");
             throw new IllegalArgumentException("Account number must be provided and start with CH or SV");
         }
         if (withdrawAmount == null || withdrawAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            log.warn("Withdrawal rejected for account {}: amount must be positive, got {}", accountNumber, withdrawAmount);
             throw new IllegalArgumentException("Withdrawal amount must be positive");
         }
 
@@ -64,12 +77,17 @@ public class ClientAccountService {
         } else if (prefix.equalsIgnoreCase("SV")) {
             requestedAcctType = AccountType.SAVINGS;
         } else {
+            log.warn("Withdrawal rejected: unrecognized account number prefix {}", prefix);
             throw new IllegalArgumentException("Unrecognized account number prefix: " + prefix);
         }
 
         if (requestedAcctType != withdrawalRequest.getAccountType()) {
+            log.warn("Withdrawal rejected for account {}: requested type {} does not match account type {}",
+                    accountNumber, withdrawalRequest.getAccountType(), requestedAcctType);
             throw new IllegalArgumentException("Requested account type does not match account number");
         }
+
+        log.info("Processing withdrawal of {} from {} account {}", withdrawAmount, requestedAcctType, accountNumber);
 
         // Single atomic repository call avoids the find-then-mutate-then-update race
         // between concurrent withdrawals on the same account.
@@ -96,9 +114,11 @@ public class ClientAccountService {
         BigDecimal amount = depositForm.getAmount();
 
         if (accountNumber == null || accountNumber.length() < 2) {
+            log.warn("Deposit rejected: missing/malformed account number");
             throw new IllegalArgumentException("Account number must be provided and start with CH or SV");
         }
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            log.warn("Deposit rejected for account {}: amount must be positive, got {}", accountNumber, amount);
             throw new IllegalArgumentException("Deposit amount must be positive");
         }
 
@@ -109,17 +129,23 @@ public class ClientAccountService {
         } else if (prefix.equalsIgnoreCase("SV")) {
             requestedAcctType = AccountType.SAVINGS;
         } else {
+            log.warn("Deposit rejected: unrecognized account number prefix {}", prefix);
             throw new IllegalArgumentException("Unrecognized account number prefix: " + prefix);
         }
 
         if (requestedAcctType != depositForm.getAccountType()) {
+            log.warn("Deposit rejected for account {}: requested type {} does not match account type {}",
+                    accountNumber, depositForm.getAccountType(), requestedAcctType);
             throw new IllegalArgumentException("Requested account type does not match account number");
         }
 
         String depositType = depositForm.getDepositType();
         if (depositType != null && !depositType.equalsIgnoreCase("cash") && !depositType.equalsIgnoreCase("check")) {
+            log.warn("Deposit rejected for account {}: invalid deposit type {}", accountNumber, depositType);
             throw new IllegalArgumentException("Deposit type must be 'cash' or 'check'");
         }
+
+        log.info("Processing {} deposit of {} into {} account {}", depositType, amount, requestedAcctType, accountNumber);
 
         // Single atomic repository call avoids the find-then-mutate-then-update race
         // between concurrent deposits on the same account.

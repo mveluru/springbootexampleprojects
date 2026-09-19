@@ -1,6 +1,7 @@
 package org.bee.banking.service;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
 import org.bee.banking.component.BankClient;
 import org.bee.banking.messages.StaticMessages;
@@ -15,10 +16,15 @@ public class PaymentService {
             this.bankClient = bankClient;
         }
 
-        @CircuitBreaker(
+        // Retry wraps CircuitBreaker (Retry is the outer aspect), so each retry
+        // attempt still respects the breaker's state. Only Retry declares a
+        // fallback: if CircuitBreaker had its own, it would swallow the failure
+        // and return normally before Retry ever saw an exception to retry on.
+        @Retry(
                 name = "bankService",
                 fallbackMethod = "paymentFallback"
         )
+        @CircuitBreaker(name = "bankService")
         public String processPayment() {
             log.debug(StaticMessages.LOG_PAYMENT_PROCESSING);
             return bankClient.processPayment();

@@ -177,6 +177,56 @@ public class AccountRepository {
         // Save pre-seeded data into mock cache
         dbMockStore.put("CH-88291", act1);
         dbMockStore.put("SV-44102", act2);
+
+        // Additional seeded checking accounts
+        seedChecking("CH-10001", new BigDecimal("3200.50"), "Carol", "Davis", LocalDate.of(1978, 3, 15), "500 5th Ave", "Denver", "CO", "80202");
+        seedChecking("CH-10002", new BigDecimal("1875.20"), "David", "Miller", LocalDate.of(1994, 8, 19), "789 Pine Rd", "Houston", "TX", "77001");
+        seedChecking("CH-10003", new BigDecimal("4620.00"), "Emma", "Wilson", LocalDate.of(1988, 12, 1), "200 2nd St", "Seattle", "WA", "98101");
+        seedChecking("CH-10004", new BigDecimal("980.35"), "Frank", "Garcia", LocalDate.of(1975, 6, 23), "100 Ocean Dr", "Miami", "FL", "33101");
+        seedChecking("CH-10005", new BigDecimal("6120.75"), "Grace", "Lee", LocalDate.of(1990, 1, 30), "300 Lake Shore Dr", "Chicago", "IL", "60601");
+        seedChecking("CH-10006", new BigDecimal("2340.60"), "Henry", "Martinez", LocalDate.of(1982, 9, 5), "150 Desert Rd", "Phoenix", "AZ", "85001");
+        seedChecking("CH-10007", new BigDecimal("1500.00"), "Ivy", "Chen", LocalDate.of(1996, 4, 11), "45 Beacon St", "Boston", "MA", "02101");
+        seedChecking("CH-10008", new BigDecimal("7890.10"), "Jack", "Robinson", LocalDate.of(1970, 11, 27), "10 Peachtree St", "Atlanta", "GA", "30301");
+        seedChecking("CH-10009", new BigDecimal("3450.90"), "Karen", "White", LocalDate.of(1985, 7, 14), "25 Pine St", "Portland", "OR", "97201");
+        seedChecking("CH-10010", new BigDecimal("2100.45"), "Liam", "Thompson", LocalDate.of(1993, 2, 8), "600 Colfax Ave", "Denver", "CO", "80203");
+
+        // Additional seeded savings accounts
+        seedSavings("SV-20001", new BigDecimal("15200.00"), "Maria", "Rodriguez", LocalDate.of(1980, 5, 19), "12 Elm St", "Dallas", "TX", "75201");
+        seedSavings("SV-20002", new BigDecimal("8900.50"), "Noah", "Anderson", LocalDate.of(1992, 10, 3), "88 Broadway", "San Diego", "CA", "92101");
+        seedSavings("SV-20003", new BigDecimal("22000.75"), "Olivia", "Harris", LocalDate.of(1987, 3, 22), "5 Music Row", "Nashville", "TN", "37201");
+        seedSavings("SV-20004", new BigDecimal("5600.30"), "Peter", "Clark", LocalDate.of(1976, 12, 15), "300 High St", "Columbus", "OH", "43201");
+        seedSavings("SV-20005", new BigDecimal("13400.00"), "Quinn", "Lewis", LocalDate.of(1995, 6, 9), "700 Congress Ave", "Austin", "TX", "78702");
+        seedSavings("SV-20006", new BigDecimal("9800.60"), "Rachel", "Walker", LocalDate.of(1983, 8, 27), "40 Trade St", "Charlotte", "NC", "28201");
+        seedSavings("SV-20007", new BigDecimal("30500.00"), "Samuel", "Young", LocalDate.of(1971, 1, 12), "120 Fremont St", "Las Vegas", "NV", "89101");
+        seedSavings("SV-20008", new BigDecimal("4200.15"), "Tina", "Hall", LocalDate.of(1998, 9, 30), "9 Orange Ave", "Orlando", "FL", "32801");
+        seedSavings("SV-20009", new BigDecimal("17650.40"), "Victor", "King", LocalDate.of(1989, 4, 18), "60 Nicollet Mall", "Minneapolis", "MN", "55401");
+        seedSavings("SV-20010", new BigDecimal("6700.25"), "Wendy", "Scott", LocalDate.of(1974, 11, 2), "15 Capitol Mall", "Sacramento", "CA", "95814");
+    }
+
+    private void seedChecking(String accountNumber, BigDecimal balance, String firstName, String lastName,
+                               LocalDate dateOfBirth, String street, String city, String state, String zip) {
+        Address address = Address.builder().street(street).city(city).state(state).zip(zip).addressLine1(street).country("USA").build();
+        Customer customer = Customer.builder().firstName(firstName).lastName(lastName).dateOfBirth(dateOfBirth).address(address).build();
+        Account account = Account.builder()
+                .checkingAccountNumber(accountNumber)
+                .checkingBalance(balance)
+                .accountType(AccountType.CHECKING)
+                .customer(customer)
+                .build();
+        dbMockStore.put(accountNumber, account);
+    }
+
+    private void seedSavings(String accountNumber, BigDecimal balance, String firstName, String lastName,
+                              LocalDate dateOfBirth, String street, String city, String state, String zip) {
+        Address address = Address.builder().street(street).city(city).state(state).zip(zip).addressLine1(street).country("USA").build();
+        Customer customer = Customer.builder().firstName(firstName).lastName(lastName).dateOfBirth(dateOfBirth).address(address).build();
+        Account account = Account.builder()
+                .savingAccountNumber(accountNumber)
+                .savingBalance(balance)
+                .accountType(AccountType.SAVINGS)
+                .customer(customer)
+                .build();
+        dbMockStore.put(accountNumber, account);
     }
 }
 /*

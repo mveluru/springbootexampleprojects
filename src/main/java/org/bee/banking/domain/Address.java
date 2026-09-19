@@ -19,14 +19,15 @@ public class Address implements Serializable {
     private String street;
     @NotBlank(message = StaticMessages.VALIDATION_CITY_REQUIRED)
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "^[a-zA-z0-9 .-]+$",message = StaticMessages.VALIDATION_CITY_INVALID_CHARS)
+    @Pattern(regexp = "^[a-zA-z0-9 .-]$",message = StaticMessages.VALIDATION_CITY_INVALID_CHARS)
     private String city;
     @NotBlank
     @NotBlank(message = StaticMessages.VALIDATION_STATE_REQUIRED)
     @Size(min = 2, max = 2, message = StaticMessages.VALIDATION_STATE_LENGTH)
+    @Pattern(regexp = "^[A-Z]{2}$",message = StaticMessages.VALIDATION_STATE_UPPERCASE)
     private String state;
-    @NotBlank
-    @Pattern(regexp = "^\\d{5}$",message = StaticMessages.VALIDATION_ZIP_NON_NEGATIVE)
+
+    @Pattern(regexp = "^\\d{5}$",message = StaticMessages.VALIDATION_ZIP_FORMAT)
     @NotBlank(message = StaticMessages.VALIDATION_ZIP_REQUIRED)
     private String zip;
     @Builder.Default

@@ -25,10 +25,10 @@ public class WithdrawalForm {
     String withdrawalStatus;// Completed , Rejected
 
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "^[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY_COMMA_NO_SPACE)
+    @Pattern(regexp = "^[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY)
     String firstName;
     @Size(min = 1, max = 25)
-    @Pattern(regexp = "^[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY_SPACE_COMMA)
+    @Pattern(regexp = "^[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY)
     String lastName;
 
     Address address;

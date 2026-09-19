@@ -39,10 +39,11 @@ public class AccountRegistrationRequest {
 
     @NotBlank(message = StaticMessages.VALIDATION_STATE_REQUIRED)
     @Size(min = 2, max = 2, message = StaticMessages.VALIDATION_STATE_LENGTH)
+    @Pattern(regexp = "^[A-Z]{2}$",message = StaticMessages.VALIDATION_STATE_UPPERCASE)
     private String state;
 
     @NotBlank(message = StaticMessages.VALIDATION_ZIP_REQUIRED)
-    @Pattern(regexp = "\\d+")
+    @Pattern(regexp = "^\\d{5}$",message = StaticMessages.VALIDATION_ZIP_FORMAT)
     private String zip;
 
     @NotBlank(message = StaticMessages.VALIDATION_ADDRESS_LINE1_REQUIRED)
@@ -60,3 +61,8 @@ public class AccountRegistrationRequest {
         return dateOfBirth != null ? dateOfBirth.getYear() : 1940;
     }
 }
+
+
+/*
+1. The +$ Variant (One or more characters until the end)In your original pattern ^[A-Z]+$:+ is a quantifier meaning "match 1 or more times".$ means "assert position at the end of the string".Combined, ^[A-Z]+$ means: "The string must start with uppercase letters, contain at least one uppercase letter, and continue matching uppercase letters all the way to the end of the string." It prevents trailing invalid characters (e.g., "TX1" or "TX ").2. The $ Variant (Exact counts or single matches)When the + is missing, it is usually because a specific quantifier or a single character check is right before the $.Exact Quantifier: ^[A-Z]{2}$The {2} replaces the +. It means "match exactly 2 times". The $ immediately follows to ensure nothing else comes after those 2 characters.Single Character: ^[A-Z]$Without any quantifier, it matches exactly one uppercase letter from start to finish.
+ */

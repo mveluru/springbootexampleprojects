@@ -18,10 +18,10 @@ import java.time.LocalDate;
 @Builder
 public class Customer implements Serializable {
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY_SHORT)
+    @Pattern(regexp = "^[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY)
     String firstName;
     @Size(min = 1, max = 25)
-    @Pattern(regexp = "[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY_PROPER)
+    @Pattern(regexp = "^[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY)
     String lastName;
     Address address;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "MM/dd/yyyy")

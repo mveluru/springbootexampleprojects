@@ -19,17 +19,17 @@ public class DepositForm {
     String  depositType; // cash or check
 
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY_NO_COMMA)
+    @Pattern(regexp = "[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY)
     String firstName;
 
     @Size(min = 1, max = 25)
-    @Pattern(regexp = "[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY_SPACE_COMMA)
+    @Pattern(regexp = "[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY)
     String lastName;
 
     @NotBlank(message = StaticMessages.VALIDATION_STREET_REQUIRED)
     private String street;
 
-    @NotBlank(message = StaticMessages.VALIDATION_DEPOSIT_ADDRESS_LINE1_REQUIRED)
+    @NotBlank(message = StaticMessages.VALIDATION_ADDRESS_LINE1_REQUIRED)
     @Size(min = 1, max = 50)
     @Pattern(regexp = "^[a-zA-z0-9 .-_]+$",message = StaticMessages.VALIDATION_DEPOSIT_ADDRESS_LINE1_INVALID_CHARS)
     private String addressLine1;
@@ -39,11 +39,12 @@ public class DepositForm {
 
     @NotBlank(message = StaticMessages.VALIDATION_CITY_REQUIRED)
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "^[a-zA-z0-9 .-]+$",message = StaticMessages.VALIDATION_CITY_INVALID_CHARS)
+    @Pattern(regexp = "^[a-zA-z0-9 .-]$",message = StaticMessages.VALIDATION_CITY_INVALID_CHARS)
     private String city;
 
     @NotBlank(message = StaticMessages.VALIDATION_STATE_REQUIRED)
     @Size(min = 2, max = 2, message = StaticMessages.VALIDATION_STATE_LENGTH)
+    @Pattern(regexp = "^[A-Z]{2}$",message = StaticMessages.VALIDATION_STATE_UPPERCASE)
     private String state;
 
     /*
@@ -52,7 +53,7 @@ public class DepositForm {
     is a best practice in validation frameworks to guarantee no leading or trailing characters sneak past
      */
     @NotBlank(message = StaticMessages.VALIDATION_ZIP_REQUIRED)
-    @Pattern(regexp = "^\\d{5}$",message = StaticMessages.VALIDATION_DEPOSIT_ZIP_PATTERN)
+    @Pattern(regexp = "^\\d{5}$",message = StaticMessages.VALIDATION_ZIP_FORMAT)
     private String zip;
 
 

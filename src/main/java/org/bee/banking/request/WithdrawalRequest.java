@@ -28,11 +28,11 @@ public class WithdrawalRequest {
     String withdrawalStatus;
 
     @Size(min = 1, max = 50)
-    @Pattern(regexp = "[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY_NO_COMMA)
+    @Pattern(regexp = "^[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY)
     String firstName;
 
     @Size(min = 1, max = 25)
-    @Pattern(regexp = "[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY_SPACE_COMMA)
+    @Pattern(regexp = "^[a-zA-Z]+$",message = StaticMessages.VALIDATION_NAME_LETTERS_ONLY)
     String lastName;
 
     @NotBlank(message = StaticMessages.VALIDATION_STREET_REQUIRED)
@@ -43,9 +43,11 @@ public class WithdrawalRequest {
 
     @NotBlank(message = StaticMessages.VALIDATION_STATE_REQUIRED)
     @Size(min = 2, max = 2, message = StaticMessages.VALIDATION_STATE_LENGTH)
+    @Pattern(regexp = "^[A-Z]{2}$",message = StaticMessages.VALIDATION_STATE_UPPERCASE)
     private String state;
 
     @NotBlank(message = StaticMessages.VALIDATION_ZIP_REQUIRED)
+
     private String zip;
 
     private String addressLine1;

@@ -81,23 +81,23 @@ public final class StaticMessages {
     public static final String VALIDATION_ACCOUNT_TYPE_REQUIRED = "Account type is required";
     public static final String VALIDATION_DOB_YEAR_MIN = "Year must be 1940 or later";
 
-    // Address-specific validation messages
-    public static final String VALIDATION_ZIP_NON_NEGATIVE = "Non negative numbers";
+    // Shared zip-format validation message (Address, AccountRegistrationRequest, DepositForm).
+    // Previously fragmented as VALIDATION_ZIP_NON_NEGATIVE ("Non negative numbers" - didn't
+    // even describe the constraint) and VALIDATION_DEPOSIT_ZIP_PATTERN; consolidated here.
+    public static final String VALIDATION_ZIP_FORMAT = "Zip code must be exactly 5 digits";
 
     // DepositForm-specific validation messages
-    public static final String VALIDATION_DEPOSIT_ADDRESS_LINE1_REQUIRED = "address line1 required.";
     public static final String VALIDATION_DEPOSIT_ADDRESS_LINE1_INVALID_CHARS = "Invalid characters in address line1";
-    public static final String VALIDATION_DEPOSIT_ZIP_PATTERN = "zip code must be exactly 5 digits";
 
     // Customer-specific validation messages
     public static final String VALIDATION_DOB_YEAR_1940 = "Date of birth must be from year 1940 onwards";
 
-    // "Letters only" name-pattern messages. Preserved verbatim per original call site
-    // (inconsistent punctuation predates this centralization) rather than merged, to
-    // avoid silently changing validation text.
-    public static final String VALIDATION_NAME_LETTERS_ONLY_SHORT = "no special chars"; // Customer.firstName
-    public static final String VALIDATION_NAME_LETTERS_ONLY_PROPER = "matches one or more letters, no spaces, no special chars"; // Customer.lastName
-    public static final String VALIDATION_NAME_LETTERS_ONLY_NO_COMMA = "matches one or more letters, no spaces no special chars"; // DepositForm.firstName, WithdrawalRequest.firstName
-    public static final String VALIDATION_NAME_LETTERS_ONLY_SPACE_COMMA = "matches one or more letters, no spaces ,no special chars"; // DepositForm.lastName, WithdrawalRequest.lastName, WithdrawalForm.lastName
-    public static final String VALIDATION_NAME_LETTERS_ONLY_COMMA_NO_SPACE = "matches one or more letters, no spaces,no special chars"; // WithdrawalForm.firstName
+    // Shared "letters only" name-pattern message (Customer, DepositForm, WithdrawalRequest,
+    // WithdrawalForm). Previously fragmented into five near-identical constants that only
+    // differed by inconsistent comma/spacing typos; consolidated into one.
+    public static final String VALIDATION_NAME_LETTERS_ONLY = "Name must contain only letters, no spaces or special characters";
+
+    // Shared state-format validation message (Address, AccountRegistrationRequest,
+    // WithdrawalRequest, DepositForm)
+    public static final String VALIDATION_STATE_UPPERCASE = "State must be uppercase letters only";
 }

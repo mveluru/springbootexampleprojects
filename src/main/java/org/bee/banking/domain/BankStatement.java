@@ -15,6 +15,6 @@ import java.util.List;
 public class BankStatement {
     private String accountNumber;
     private LocalDate beginDate;
-    private LocalDate endDate;
-    private List<AccountTransaction> transactions;
+    private LocalDate endDate; // Can't be in future , EndDate can be in past but at min month before than Today.
+    private List<AccountTransaction> transactions; // transactions should include type it's cash or check deposit.
 }

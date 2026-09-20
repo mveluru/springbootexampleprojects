@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="500bfae8-b424-4f4d-b8ec-4b2725646d06" name="Changes" comment="New Requirements">
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/service/BankStatementService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/service/BankStatementService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/service/ClientAccountService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/service/ClientAccountService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/service/NotificationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/service/NotificationService.java" afterDir="false" />
-    </list>
+    <list default="true" id="500bfae8-b424-4f4d-b8ec-4b2725646d06" name="Changes" comment="New Requirements" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -175,15 +171,7 @@
       <workItem from="1789302169604" duration="5729000" />
       <workItem from="1789490859106" duration="2743000" />
       <workItem from="1789612767360" duration="55487000" />
-      <workItem from="1789851823700" duration="7816000" />
-    </task>
-    <task id="LOCAL-00005" summary="Initial commit">
-      <option name="closed" value="true" />
-      <created>1788671496274</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1788671496274</updated>
+      <workItem from="1789851823700" duration="8032000" />
     </task>
     <task id="LOCAL-00006" summary="Initial commit">
       <option name="closed" value="true" />
@@ -569,7 +557,15 @@
       <option name="project" value="LOCAL" />
       <updated>1789866360323</updated>
     </task>
-    <option name="localTasksCounter" value="54" />
+    <task id="LOCAL-00054" summary="New Requirements">
+      <option name="closed" value="true" />
+      <created>1789873991402</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1789873991402</updated>
+    </task>
+    <option name="localTasksCounter" value="55" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

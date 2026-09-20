@@ -73,6 +73,10 @@ public final class BankingMessages {
     public static final String LOG_EMAIL_SENT = "Email sent to {} on thread: {}";
     public static final String LOG_EMAIL_DISABLED = "Email notifications disabled; skipping send to {}";
     public static final String LOG_EMAIL_INTERRUPTED = "Email send to {} interrupted";
+    public static final String LOG_SMS_SENT = "SMS sent to {} on thread: {}";
+    public static final String LOG_SMS_DISABLED = "SMS notifications disabled; skipping send to {}";
+    public static final String LOG_SMS_DAILY_LIMIT_REACHED = "SMS daily limit of {} reached; skipping send to {}";
+    public static final String LOG_SMS_INTERRUPTED = "SMS send to {} interrupted";
     public static final String LOG_REPORT_INTERRUPTED = "Report generation interrupted";
     public static final String LOG_REPORT_GENERATED = "Report generated successfully";
 

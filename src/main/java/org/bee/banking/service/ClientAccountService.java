@@ -73,6 +73,7 @@ public class ClientAccountService {
                 savedAccount.getCheckingAccountNumber() != null
                         ? savedAccount.getCheckingAccountNumber() : savedAccount.getSavingAccountNumber());
         notificationService.sendEmail(request.getFirstName()+" "+request.getLastName());
+        notificationService.sendSms(request.getFirstName()+" "+request.getLastName());
         return savedAccount;
     }
 
@@ -136,6 +137,7 @@ public class ClientAccountService {
                 .build());
 
         notificationService.sendEmail(withdrawalRequest.getFirstName()+" "+withdrawalRequest.getLastName());
+        notificationService.sendSms(withdrawalRequest.getFirstName()+" "+withdrawalRequest.getLastName());
 
         return updatedAccount;
     }

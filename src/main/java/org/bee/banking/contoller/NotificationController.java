@@ -23,6 +23,13 @@ public class NotificationController {
         return "Email request accepted! Check console logs in 3 seconds.";
     }
 
+    // Trigger fire-and-forget SMS task (returns immediately)
+    @GetMapping("/notify-sms")
+    public String notifyUserBySms(@RequestParam String name) {
+        notificationService.sendSms(name);
+        return "SMS request accepted! Check console logs in 3 seconds.";
+    }
+
     // Trigger async task that eventually returns a response
     @GetMapping("/report")
     public CompletableFuture<String> getReport() {

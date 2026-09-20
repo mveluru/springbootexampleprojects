@@ -49,6 +49,7 @@ public class BankStatementService {
 
         log.info(BankingMessages.LOG_STATEMENT_GENERATED, accountNumber, transactions.size(), beginDate, endDate);
         notificationService.sendEmail(accountNumber.substring(0,5)+"xxx");
+        notificationService.sendSms(accountNumber.substring(0,5)+"xxx");
         return BankStatement.builder()
                 .accountNumber(accountNumber)
                 .beginDate(beginDate)

@@ -23,6 +23,7 @@ public class BankStatementService {
     private final AccountRepository accountRepository;
     private final TransactionRepository transactionRepository;
     private final AccountConstraints accountConstraints;
+    private final NotificationService notificationService;
 
     public BankStatement generateStatement(String accountNumber, LocalDate beginDate, LocalDate endDate) {
         if (accountRepository.findByAccountNumber(accountNumber).isEmpty()) {
@@ -42,7 +43,7 @@ public class BankStatementService {
                 .toList();
 
         log.info(BankingMessages.LOG_STATEMENT_GENERATED, accountNumber, transactions.size(), beginDate, endDate);
-
+        notificationService.sendEmail(accountNumber.substring(1,5)+"xxx");
         return BankStatement.builder()
                 .accountNumber(accountNumber)
                 .beginDate(beginDate)

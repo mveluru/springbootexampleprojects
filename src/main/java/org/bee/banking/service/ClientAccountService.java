@@ -20,6 +20,7 @@ import org.bee.banking.repository.AccountRepository;
 import org.bee.banking.request.AccountRegistrationRequest;
 import org.bee.banking.request.WithdrawalRequest;
 import org.bee.banking.rules.AccountConstraints;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +39,7 @@ public class ClientAccountService {
     private final WithdrawalRepository withdrawalRespository;
     private final TransactionRepository transactionRepository;
     private final AccountConstraints accountConstraints;
+    private final NotificationService notificationService;
 
     /**
      * Flow A: Look up consumer account details
@@ -70,6 +72,7 @@ public class ClientAccountService {
         log.info(BankingMessages.LOG_ACCOUNT_REGISTERED, savedAccount.getAccountType(),
                 savedAccount.getCheckingAccountNumber() != null
                         ? savedAccount.getCheckingAccountNumber() : savedAccount.getSavingAccountNumber());
+        notificationService.sendEmail(request.getFirstName()+" "+request.getLastName());
         return savedAccount;
     }
 
@@ -131,6 +134,8 @@ public class ClientAccountService {
                 .balanceAfter(balanceAfter)
                 .transactionDate(LocalDate.now())
                 .build());
+
+        notificationService.sendEmail(withdrawalRequest.getFirstName()+" "+withdrawalRequest.getLastName());
 
         return updatedAccount;
     }

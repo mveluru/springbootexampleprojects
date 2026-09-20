@@ -13,13 +13,13 @@ public class NotificationService {
 
     // 1. Fire-and-Forget (void return type)
     @Async
-    public void sendEmail(String user) {
+    public void sendEmail(String customer) {
         try {
             Thread.sleep(3000); // Simulate 3-second delay
-            log.info(BankingMessages.LOG_EMAIL_SENT, user, Thread.currentThread().getName());
+            log.info(BankingMessages.LOG_EMAIL_SENT, customer, Thread.currentThread().getName());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.warn(BankingMessages.LOG_EMAIL_INTERRUPTED, user);
+            log.warn(BankingMessages.LOG_EMAIL_INTERRUPTED, customer);
         }
     }
 
@@ -27,7 +27,7 @@ public class NotificationService {
     @Async
     public CompletableFuture<String> fetchReportData() {
         try {
-            Thread.sleep(2000); // Simulate delay
+            Thread.sleep(3000); // Simulate delay
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.warn(BankingMessages.LOG_REPORT_INTERRUPTED);

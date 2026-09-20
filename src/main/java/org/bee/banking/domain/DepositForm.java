@@ -16,6 +16,7 @@ public class DepositForm {
     String AccountNumber;
     BigDecimal amount;
     AccountType accountType;
+    @NotBlank(message = BankingMessages.VALIDATION_DEPOSIT_TYPE_REQUIRED)
     String  depositType; // cash or check
 
     @Size(min = 1, max = 50)

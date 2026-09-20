@@ -109,6 +109,7 @@ public final class BankingMessages {
 
     // DepositForm-specific validation messages
     public static final String VALIDATION_DEPOSIT_ADDRESS_LINE1_INVALID_CHARS = "Invalid characters in address line1";
+    public static final String VALIDATION_DEPOSIT_TYPE_REQUIRED = "Deposit type is required";
 
     // Customer-specific validation messages
     public static final String VALIDATION_DOB_YEAR_1940 = "Date of birth must be from year 1940 onwards";

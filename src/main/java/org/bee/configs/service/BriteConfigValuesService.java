@@ -5,7 +5,6 @@ import org.bee.configs.config.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -18,31 +17,28 @@ public class BriteConfigValuesService {
     private BriteEmailConfigValues briteEmailConfigValues;
     @Autowired
     private BriteSmsNotificationConfigValues briteSmsNotificationConfigValues;
-    public static final Map<String,String> configValues= new HashMap<>();
-    public static final Map<String,String> emailConfigValues= new HashMap<>();
-    public static final Map<String,String> smsConfigValues= new HashMap<>();
 
-
-    public  Map<String,String> applicationConfigValues() {
-        configValues.put("connectionPoolSize", String.valueOf(briteApplicationConfigValues.getConnectionPoolSize()));
-        configValues.put("timeoutInSeconds",String.valueOf(briteApplicationConfigValues.getTimeoutSeconds()));
-      return configValues;
+    public Map<String,String> applicationConfigValues() {
+        return Map.of(
+                "connectionPoolSize", String.valueOf(briteApplicationConfigValues.getConnectionPoolSize()),
+                "timeoutInSeconds", String.valueOf(briteApplicationConfigValues.getTimeoutSeconds())
+        );
     }
 
-    public  Map<String,String> emailConfigValues() {
-        emailConfigValues.put("enabled", String.valueOf(briteEmailConfigValues.isEnabled()));
-        emailConfigValues.put("fromAddress",String.valueOf(briteEmailConfigValues.getFromAddress()));
-        emailConfigValues.put("supportAddress",String.valueOf(briteEmailConfigValues.getSupportAddress()));
-        emailConfigValues.put("dailyLimit",String.valueOf(briteEmailConfigValues.getDailyLimit()));
-        return emailConfigValues;
+    public Map<String,String> emailConfigValues() {
+        return Map.of(
+                "enabled", String.valueOf(briteEmailConfigValues.isEnabled()),
+                "fromAddress", String.valueOf(briteEmailConfigValues.getFromAddress()),
+                "supportAddress", String.valueOf(briteEmailConfigValues.getSupportAddress()),
+                "dailyLimit", String.valueOf(briteEmailConfigValues.getDailyLimit())
+        );
     }
 
-    public  Map<String,String> smsConfigValues() {
-        smsConfigValues.put("enabled", String.valueOf(briteSmsNotificationConfigValues.isEnabled()));
-        smsConfigValues.put("sender-id",String.valueOf(briteSmsNotificationConfigValues.getSenderId()));
-        smsConfigValues.put("dailyLimit",String.valueOf(briteSmsNotificationConfigValues.getDailyLimit()));
-        return smsConfigValues;
+    public Map<String,String> smsConfigValues() {
+        return Map.of(
+                "enabled", String.valueOf(briteSmsNotificationConfigValues.isEnabled()),
+                "sender-id", String.valueOf(briteSmsNotificationConfigValues.getSenderId()),
+                "dailyLimit", String.valueOf(briteSmsNotificationConfigValues.getDailyLimit())
+        );
     }
-
-
 }

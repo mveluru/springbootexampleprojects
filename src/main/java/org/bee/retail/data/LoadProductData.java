@@ -29,22 +29,22 @@ public class LoadProductData {
         Product product15 = new Product("116", "Canadian Copper", "1kg", 1000);
         Product product16 = new Product("117", "Canadian Bronze", "1kg", 10000);
 
-        productrepo.put(String.valueOf(101), product1);
-        productrepo.put(String.valueOf(102), product2);
-        productrepo.put(String.valueOf(103), product3);
-        productrepo.put(String.valueOf(104), product4);
-        productrepo.put(String.valueOf(105), product5);
-        productrepo.put(String.valueOf(106), product6);
-        productrepo.put(String.valueOf(107), product7);
-        productrepo.put(String.valueOf(108), product8);
-        productrepo.put(String.valueOf(109), product9);
-        productrepo.put(String.valueOf(110), product10);
-        productrepo.put(String.valueOf(111), product11);
-        productrepo.put(String.valueOf(112), product12);
-        productrepo.put(String.valueOf(113), product13);
-        productrepo.put(String.valueOf(114), product14);
-        productrepo.put(String.valueOf(115), product15);
-        productrepo.put(String.valueOf(116), product16);
+        productrepo.put(product1.getProductId(), product1);
+        productrepo.put(product2.getProductId(), product2);
+        productrepo.put(product3.getProductId(), product3);
+        productrepo.put(product4.getProductId(), product4);
+        productrepo.put(product5.getProductId(), product5);
+        productrepo.put(product6.getProductId(), product6);
+        productrepo.put(product7.getProductId(), product7);
+        productrepo.put(product8.getProductId(), product8);
+        productrepo.put(product9.getProductId(), product9);
+        productrepo.put(product10.getProductId(), product10);
+        productrepo.put(product11.getProductId(), product11);
+        productrepo.put(product12.getProductId(), product12);
+        productrepo.put(product13.getProductId(), product13);
+        productrepo.put(product14.getProductId(), product14);
+        productrepo.put(product15.getProductId(), product15);
+        productrepo.put(product16.getProductId(), product16);
 
         return productrepo;
     }

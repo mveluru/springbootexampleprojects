@@ -89,6 +89,9 @@ public final class BankingMessages {
     public static final String VALIDATION_STATE_LENGTH = "State must be exactly 2 characters (e.g., TX)";
     public static final String VALIDATION_ZIP_REQUIRED = "Zip code is required";
 
+    // AccountLookupRequest-specific validation messages
+    public static final String VALIDATION_ACCOUNT_NUMBER_REQUIRED = "Account number is required";
+
     // AccountRegistrationRequest-specific validation messages
     public static final String VALIDATION_FIRST_NAME_REQUIRED = "First name is required";
     public static final String VALIDATION_FIRST_NAME_MAX_LENGTH = "First name cannot exceed 50 characters";
@@ -97,7 +100,7 @@ public final class BankingMessages {
     public static final String VALIDATION_DOB_REQUIRED = "Date of birth is required";
     public static final String VALIDATION_ADDRESS_LINE1_REQUIRED = "Address line1 is required";
     public static final String VALIDATION_ACCOUNT_TYPE_REQUIRED = "Account type is required";
-    public static final String VALIDATION_DOB_YEAR_MIN = "Year must be 1940 or later";
+    public static final String VALIDATION_DOB_YEAR_MIN = "Must be 1940 or later, and minimum age requirement is 18";
 
     // Shared zip-format validation message (Address, AccountRegistrationRequest, DepositForm).
     // Previously fragmented as VALIDATION_ZIP_NON_NEGATIVE ("Non negative numbers" - didn't

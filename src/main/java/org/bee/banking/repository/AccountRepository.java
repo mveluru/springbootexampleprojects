@@ -45,7 +45,9 @@ public class AccountRepository {
     public Account save(Account account) {
         // Generate mock account numbers if they don't exist yet
         if (account.getCheckingAccountNumber() == null && account.getSavingAccountNumber() == null) {
-            String generatedNum = "ACT-" + (dbMockStore.size() + 10001);
+            // Prefix must be "CH" or "SV" - withdraw/deposit resolve account type from it
+            String prefix = account.getAccountType() == AccountType.CHECKING ? "CH" : "SV";
+            String generatedNum = prefix + "-" + (dbMockStore.size() + 10001);
             if (account.getAccountType() == AccountType.CHECKING) {
                 account.setCheckingAccountNumber(generatedNum);
                 account.setCheckingBalance(BigDecimal.ZERO);

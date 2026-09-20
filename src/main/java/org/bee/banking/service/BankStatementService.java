@@ -30,6 +30,11 @@ public class BankStatementService {
             throw new AccountNotFoundException(String.format(BankingMessages.ACCOUNT_NOT_FOUND, accountNumber));
         }
 
+        if (endDate.isBefore(beginDate)) {
+            log.warn(BankingMessages.LOG_STATEMENT_REJECTED_DATE_ORDER, accountNumber, endDate, beginDate);
+            throw new IllegalArgumentException(BankingMessages.STATEMENT_END_BEFORE_BEGIN);
+        }
+
         int maxMonths = accountConstraints.getMaxStatementRangeMonths();
         Period range = Period.between(beginDate, endDate);
         int rangeInMonths = range.getYears() * 12 + range.getMonths();

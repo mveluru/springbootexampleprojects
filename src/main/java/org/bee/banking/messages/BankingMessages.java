@@ -18,6 +18,7 @@ public final class BankingMessages {
     public static final String MAX_CASH_DEPOSIT_EXCEEDED = "Cash deposits cannot exceed %s";
     public static final String MIN_BALANCE_VIOLATION = "Withdrawal declined: account %s must retain a minimum balance of %s";
     public static final String STATEMENT_RANGE_EXCEEDED = "Statement date range cannot exceed %d months";
+    public static final String STATEMENT_END_BEFORE_BEGIN = "End date cannot be before begin date";
 
     // AccountRepository log messages (Slf4j-style, {} placeholders)
     public static final String LOG_ACCOUNT_NUMBER_GENERATED = "Generated new {} account number {}";
@@ -56,6 +57,7 @@ public final class BankingMessages {
 
     // BankStatementService log messages
     public static final String LOG_STATEMENT_REJECTED_RANGE = "Statement rejected for account {}: range {} to {} exceeds maximum {} months";
+    public static final String LOG_STATEMENT_REJECTED_DATE_ORDER = "Statement rejected for account {}: end date {} is before begin date {}";
     public static final String LOG_STATEMENT_GENERATED = "Generated statement for account {}: {} transactions between {} and {}";
 
     // BankingExceptionHandler log messages

@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.bee.banking.domain.validtors.ValidBirthYear;
 import org.bee.banking.messages.BankingMessages;
 import org.hibernate.validator.constraints.Range;
 
@@ -57,6 +58,7 @@ public class AccountRegistrationRequest {
 
     // Custom helper method to enforce the 1940 cutoff rule automatically
     @Range(min = 1940, max = 3000, message = BankingMessages.VALIDATION_DOB_YEAR_MIN)
+    @ValidBirthYear(message = BankingMessages.VALIDATION_DOB_YEAR_MIN)
     public int getDateOfBirthYear() {
         return dateOfBirth != null ? dateOfBirth.getYear() : 1940;
     }

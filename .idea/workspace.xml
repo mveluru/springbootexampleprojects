@@ -4,7 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="500bfae8-b424-4f4d-b8ec-4b2725646d06" name="Changes" comment="New Requirements" />
+    <list default="true" id="500bfae8-b424-4f4d-b8ec-4b2725646d06" name="Changes" comment="New Requirements">
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/domain/validtors/ValidBirthYear.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/domain/validtors/ValidBirthYearValidator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/domain/BankStatement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/domain/BankStatement.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/request/AccountRegistrationRequest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/request/AccountRegistrationRequest.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -171,15 +177,7 @@
       <workItem from="1789302169604" duration="5729000" />
       <workItem from="1789490859106" duration="2743000" />
       <workItem from="1789612767360" duration="55487000" />
-      <workItem from="1789851823700" duration="8032000" />
-    </task>
-    <task id="LOCAL-00006" summary="Initial commit">
-      <option name="closed" value="true" />
-      <created>1788671573679</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1788671573679</updated>
+      <workItem from="1789851823700" duration="11883000" />
     </task>
     <task id="LOCAL-00007" summary="Initial commit">
       <option name="closed" value="true" />
@@ -565,7 +563,15 @@
       <option name="project" value="LOCAL" />
       <updated>1789873991402</updated>
     </task>
-    <option name="localTasksCounter" value="55" />
+    <task id="LOCAL-00055" summary="New Requirements">
+      <option name="closed" value="true" />
+      <created>1789874551133</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1789874551133</updated>
+    </task>
+    <option name="localTasksCounter" value="56" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

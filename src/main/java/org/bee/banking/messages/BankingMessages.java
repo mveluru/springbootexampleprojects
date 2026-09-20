@@ -71,6 +71,7 @@ public final class BankingMessages {
 
     // NotificationService log messages
     public static final String LOG_EMAIL_SENT = "Email sent to {} on thread: {}";
+    public static final String LOG_EMAIL_DISABLED = "Email notifications disabled; skipping send to {}";
     public static final String LOG_EMAIL_INTERRUPTED = "Email send to {} interrupted";
     public static final String LOG_REPORT_INTERRUPTED = "Report generation interrupted";
     public static final String LOG_REPORT_GENERATED = "Report generated successfully";

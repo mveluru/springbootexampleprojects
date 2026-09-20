@@ -3,6 +3,7 @@ package org.bee.events.controller;
 
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.JsonSchema;
@@ -62,6 +63,8 @@ public class EventController {
 
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Unsupported DTO version: " + version);
 
+        } catch (JsonProcessingException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Malformed JSON: " + e.getOriginalMessage());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }

@@ -1,0 +1,1 @@
+# REST conventions, DTO/response shapes

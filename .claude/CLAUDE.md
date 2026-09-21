@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-A Spring Boot 3 (Java 21) REST application (`org.bee`, artifact `SBProjects`) that demonstrates several backend patterns in isolated modules: `@ConfigurationProperties` binding, async notification processing, JSON Schema-validated event ingestion, Resilience4j circuit breaking/retry, MapStruct mapping, and Spring Data JPA — see `README.md` for the full endpoint table and sample `curl` requests.
+A Spring Boot 3 (Java 21) REST application (`org.bee`, artifact `SBProjects`) that demonstrates several backend patterns in isolated modules: `@ConfigurationProperties` binding, async notification processing, JSON Schema-validated event ingestion, Resilience4j circuit breaking/retry, MapStruct mapping, and Spring Data JPA — see `../README.md` for the full endpoint table and sample `curl` requests.
 
 ## Commands
 
@@ -16,7 +16,7 @@ mvn test -Dtest=ClassName#methodName              # run a single test method
 mvn spring-boot:run        # start the server (port 8081, context path /brite)
 ```
 
-**A live MySQL instance is required to run the app or the test suite.** The datasource in `src/main/resources/application.yml` (`spring.datasource.url: jdbc:mysql://localhost:3306/db_example`) is real — there is no H2/test profile override (`src/test/resources` doesn't exist), so `@SpringBootTest` classes boot the full context against that same MySQL instance. `spring.jpa.hibernate.ddl-auto: update` auto-creates/updates tables (currently just `events`) on startup.
+**A live MySQL instance is required to run the app or the test suite.** The datasource in `../src/main/resources/application.yml` (`spring.datasource.url: jdbc:mysql://localhost:3306/db_example`) is real — there is no H2/test profile override (`src/test/resources` doesn't exist), so `@SpringBootTest` classes boot the full context against that same MySQL instance. `spring.jpa.hibernate.ddl-auto: update` auto-creates/updates tables (currently just `events`) on startup.
 
 Base URL for every endpoint: `http://localhost:8081/brite` (context path `/brite` is configured in `application.yml`).
 

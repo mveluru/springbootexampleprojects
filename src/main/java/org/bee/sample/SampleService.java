@@ -16,8 +16,7 @@ public class SampleService {
         this.sampleRepository = sampleRepository;
     }
 
-    public  String sample(String item) {
-        Integer itemNumber = sampleRepository.findByItem(item);;
-        return String.valueOf(itemNumber);
+    public Integer sample(String item) {
+        return sampleRepository.findByItem(item);
     }
 }

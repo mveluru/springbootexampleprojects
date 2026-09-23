@@ -62,6 +62,10 @@ All banking exception messages *and* Slf4j log templates live in `BankingMessage
 
 `PaymentService.processPayment` stacks `@Retry` above `@CircuitBreaker` deliberately (see the comment on that method): Retry is the outer aspect so each retry attempt still respects the breaker's state, and only `@Retry` declares a `fallbackMethod` — if `@CircuitBreaker` also had one, it would swallow failures before `@Retry` ever saw them.
 
+### Liveness/readiness probes
+
+`management.endpoint.health.probes.enabled: true` (in `application.yml`) turns on Spring Boot's Kubernetes-style health groups, exposed at `/actuator/health/liveness` and `/actuator/health/readiness`. Liveness only reflects `LivenessStateHealthIndicator` (the JVM process), so it stays `UP` even if MySQL is down. Readiness is explicitly configured (`management.endpoint.health.group.readiness.include: readinessState,db`) to also fold in the `DataSourceHealthIndicator`, so it flips to `DOWN` if the MySQL connection is lost — that's deliberate, since this app can't actually serve most endpoints without the datasource. If you add other hard dependencies (e.g. a new external service health indicator), add them to that same `readiness.include` list rather than relying on the default `/actuator/health` aggregate.
+
 ### Known package/naming typos (match exactly when searching or importing)
 
 - `org.bee.banking.contoller` (missing an "r") holds all banking controllers, not `controller`

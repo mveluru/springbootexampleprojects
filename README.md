@@ -46,6 +46,14 @@ management:
   endpoints:
     web:
       base-path: /actuator
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+      group:
+        readiness:
+          include: readinessState,db
 
 spring:
   profiles:
@@ -156,7 +164,9 @@ All REST endpoints are prefixed with `http://localhost:8081/brite`:
 
 | Method | Endpoint Path | Description |
 | :--- | :--- | :--- |
-| `GET` | `/actuator/health` | Returns Spring Boot Actuator application health status |
+| `GET` | `/actuator/health` | Returns Spring Boot Actuator application health status (aggregates the `liveness`/`readiness` groups plus `db`, disk space, etc.) |
+| `GET` | `/actuator/health/liveness` | Kubernetes liveness probe — `UP` as long as the process is running; never reflects the MySQL connection |
+| `GET` | `/actuator/health/readiness` | Kubernetes readiness probe — `UP` only while the app's readiness state is `ACCEPTING_TRAFFIC` **and** the MySQL `db` health indicator is `UP` |
 
 ---
 
@@ -193,6 +203,10 @@ curl -s http://localhost:8081/brite/v1/configs/sms-config/values
 
 # Check Actuator Health
 curl -s http://localhost:8081/brite/actuator/health
+
+# Kubernetes-style liveness/readiness probes
+curl -s http://localhost:8081/brite/actuator/health/liveness
+curl -s http://localhost:8081/brite/actuator/health/readiness
 
 # Get All Products
 curl -s http://localhost:8081/brite/v1/product/allproducts
@@ -282,4 +296,6 @@ mvn test
 | :--- | :--- |
 | `ProductControllerTest` | `/v1/product` endpoints — list, get by ID (found + `404` not-found), add, product message |
 | `BriteConfigValuesControllerTest` | `/v1/configs` config endpoints — app, email, SMS |
-| `SpringBootProjectsApplicationTests` | Application context load + actuator health |
+| `SpringBootProjectsApplicationTests` | Application context load + actuator health, liveness, and readiness probes |
+| `AccountRepositoryTest` | Plain unit test (no Spring context/MySQL) — account creation defaults, ACTIVE/CLOSED status lifecycle, withdraw/deposit balance rules |
+| `ClientAccountServiceTest` | Plain unit test (no Spring context/MySQL) — registration age gating, withdraw/deposit input validation |

@@ -29,4 +29,21 @@ class SpringBootProjectsApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"));
     }
+
+    @Test
+    void testActuatorLivenessProbe() throws Exception {
+        mockMvc.perform(get("/actuator/health/liveness"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"));
+    }
+
+    @Test
+    void testActuatorReadinessProbe() throws Exception {
+        mockMvc.perform(get("/actuator/health/readiness"))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("UP"))
+                .andExpect(jsonPath("$.components.db.status").value("UP"));
+    }
 }

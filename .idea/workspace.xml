@@ -7,9 +7,9 @@
     <list default="true" id="500bfae8-b424-4f4d-b8ec-4b2725646d06" name="Changes" comment="Claude.md and configuration , setting.local.json etc">
       <change beforePath="$PROJECT_DIR$/.claude/CLAUDE.md" beforeDir="false" afterPath="$PROJECT_DIR$/.claude/CLAUDE.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/contoller/ClientAccountController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/contoller/ClientAccountController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/statement/AccountStatusStatementService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/service/AccountStatusStatementService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/statement/AccountStatusView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/domain/AccountStatusView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/service/AccountStatusStatementService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/service/AccountStatusStatementService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/org/bee/banking/statement/AccountStatusStatementServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/bee/banking/statement/AccountStatusStatementServiceTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -141,6 +141,10 @@
       <recent name="$PROJECT_DIR$/.claude" />
       <recent name="$PROJECT_DIR$/src/main/resources/schemas" />
     </key>
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="org.bee.banking.service" />
+      <recent name="org.bee.banking.domain" />
+    </key>
     <key name="CopyClassDialog.RECENTS_KEY">
       <recent name="org.bee.banking.component" />
     </key>
@@ -187,15 +191,7 @@
       <workItem from="1789490859106" duration="2743000" />
       <workItem from="1789612767360" duration="55487000" />
       <workItem from="1789851823700" duration="19964000" />
-      <workItem from="1790087877417" duration="9638000" />
-    </task>
-    <task id="LOCAL-00009" summary="README.md updated">
-      <option name="closed" value="true" />
-      <created>1788736565973</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1788736565973</updated>
+      <workItem from="1790087877417" duration="10300000" />
     </task>
     <task id="LOCAL-00010" summary="Find All Method Refactored.">
       <option name="closed" value="true" />
@@ -581,7 +577,15 @@
       <option name="project" value="LOCAL" />
       <updated>1789960015524</updated>
     </task>
-    <option name="localTasksCounter" value="58" />
+    <task id="LOCAL-00058" summary="Claude.md and configuration , setting.local.json etc">
+      <option name="closed" value="true" />
+      <created>1790201118870</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1790201118870</updated>
+    </task>
+    <option name="localTasksCounter" value="59" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

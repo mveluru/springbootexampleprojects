@@ -38,13 +38,15 @@ public class ClientAccountController {
     private final AccountStatusStatementService accountStatusStatementService;
 
     /**
-     * Scenario G: List/search accounts together with their status, lifecycle dates,
-     * and owning customer's name, optionally filtered by status and/or a
-     * createdDate/closedDate range, paginated.
-     * GET /api/accounts?status=CLOSED&createdFrom=2021-01-01&createdTo=2021-12-31&page=0&size=20&sort=createdDate,desc
+     * Scenario G: Retrieve account names/details within a createdDate/closedDate
+     * range. Conditional lookup: if {@code accountNumber} is provided, only that
+     * account is returned (still subject to the date-range/status filters); if it's
+     * omitted/null, every account within the range is returned, paginated.
+     * GET /api/accounts?accountNumber=CH-88291&status=CLOSED&createdFrom=2021-01-01&createdTo=2021-12-31&page=0&size=20&sort=createdDate,desc
      */
     @GetMapping
     public ResponseEntity<Page<AccountStatusView>> listAccounts(
+            @RequestParam(required = false) String accountNumber,
             @RequestParam(required = false) AccountStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdTo,
@@ -52,8 +54,21 @@ public class ClientAccountController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closedTo,
             @PageableDefault(size = 20, sort = "createdDate") Pageable pageable) {
         Page<AccountStatusView> accounts = accountStatusStatementService.listAccountStatuses(
-                status, createdFrom, createdTo, closedFrom, closedTo, pageable);
+                accountNumber, status, createdFrom, createdTo, closedFrom, closedTo, pageable);
         return ResponseEntity.ok(accounts);
+    }
+
+    /**
+     * Scenario H: Look up a single account's status/lifecycle info by account number
+     * GET /api/accounts/{accountNumber}/status
+     */
+    @GetMapping("/{accountNumber}/status")
+    public ResponseEntity<?> accountStatus(@PathVariable String accountNumber) {
+        return accountStatusStatementService.getAccountStatus(accountNumber)
+                .<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body("Account number not found in our records."));
     }
 
     /**

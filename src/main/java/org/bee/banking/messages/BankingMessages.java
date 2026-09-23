@@ -65,7 +65,7 @@ public final class BankingMessages {
     public static final String LOG_DEPOSIT_REJECTED_MAX_CASH = "Deposit rejected for account {}: cash amount {} exceeds maximum {}";
     public static final String LOG_REGISTRATION_REJECTED_AGE = "Registration rejected: age {} is below minimum {}";
     public static final String LOG_ACCOUNT_SEARCH_REJECTED_DATE_RANGE = "Account search rejected: invalid date range - {}";
-    public static final String LOG_ACCOUNT_SEARCH = "Searching accounts: status={}, createdFrom={}, createdTo={}, closedFrom={}, closedTo={}, page={}";
+    public static final String LOG_ACCOUNT_SEARCH = "Searching accounts: accountNumber={}, status={}, createdFrom={}, createdTo={}, closedFrom={}, closedTo={}, page={}";
 
     // BankStatementService log messages
     public static final String LOG_STATEMENT_REJECTED_RANGE = "Statement rejected for account {}: range {} to {} exceeds maximum {} months";

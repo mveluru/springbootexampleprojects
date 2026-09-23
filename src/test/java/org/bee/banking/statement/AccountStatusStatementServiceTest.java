@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -45,7 +46,7 @@ class AccountStatusStatementServiceTest {
         LocalDate from = LocalDate.of(2024, 6, 1);
         LocalDate to = LocalDate.of(2024, 1, 1);
 
-        assertThatThrownBy(() -> service.listAccountStatuses(null, from, to, null, null, PageRequest.of(0, 10)))
+        assertThatThrownBy(() -> service.listAccountStatuses(null, null, from, to, null, null, PageRequest.of(0, 10)))
                 .isInstanceOf(IllegalArgumentException.class);
 
         verifyNoInteractions(accountRepository);
@@ -56,7 +57,7 @@ class AccountStatusStatementServiceTest {
         LocalDate from = LocalDate.of(2024, 6, 1);
         LocalDate to = LocalDate.of(2024, 1, 1);
 
-        assertThatThrownBy(() -> service.listAccountStatuses(AccountStatus.CLOSED, null, null, from, to, PageRequest.of(0, 10)))
+        assertThatThrownBy(() -> service.listAccountStatuses(null, AccountStatus.CLOSED, null, null, from, to, PageRequest.of(0, 10)))
                 .isInstanceOf(IllegalArgumentException.class);
 
         verifyNoInteractions(accountRepository);
@@ -74,10 +75,10 @@ class AccountStatusStatementServiceTest {
                 .customer(customer)
                 .build();
         Pageable pageable = PageRequest.of(0, 10);
-        when(accountRepository.search(null, null, null, null, null, pageable))
+        when(accountRepository.search(null, null, null, null, null, null, pageable))
                 .thenReturn(new PageImpl<>(List.of(account), pageable, 1));
 
-        Page<AccountStatusView> result = service.listAccountStatuses(null, null, null, null, null, pageable);
+        Page<AccountStatusView> result = service.listAccountStatuses(null, null, null, null, null, null, pageable);
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         AccountStatusView view = result.getContent().get(0);
@@ -101,13 +102,61 @@ class AccountStatusStatementServiceTest {
                 .customer(Customer.builder().firstName("Bob").lastName("Jones").dateOfBirth(LocalDate.of(1980, 1, 1)).build())
                 .build();
         Pageable pageable = PageRequest.of(0, 10);
-        when(accountRepository.search(AccountStatus.CLOSED, null, null, null, null, pageable))
+        when(accountRepository.search(null, AccountStatus.CLOSED, null, null, null, null, pageable))
                 .thenReturn(new PageImpl<>(List.of(account), pageable, 1));
 
-        Page<AccountStatusView> result = service.listAccountStatuses(AccountStatus.CLOSED, null, null, null, null, pageable);
+        Page<AccountStatusView> result = service.listAccountStatuses(null, AccountStatus.CLOSED, null, null, null, null, pageable);
 
         AccountStatusView view = result.getContent().get(0);
         assertThat(view.getAccountNumber()).isEqualTo("SV-1");
         assertThat(view.getClosedDate()).isEqualTo(LocalDate.of(2022, 1, 1));
+    }
+
+    @Test
+    void listAccountStatuses_accountNumberProvided_passesItThroughToRepositoryAndMapsResult() {
+        Account account = Account.builder()
+                .checkingAccountNumber("CH-1")
+                .accountType(AccountType.CHECKING)
+                .accountStatus(AccountStatus.ACTIVE)
+                .createdDate(LocalDate.of(2021, 1, 1))
+                .customer(Customer.builder().firstName("Carol").lastName("Davis").dateOfBirth(LocalDate.of(1978, 3, 15)).build())
+                .build();
+        Pageable pageable = PageRequest.of(0, 10);
+        when(accountRepository.search("CH-1", null, null, null, null, null, pageable))
+                .thenReturn(new PageImpl<>(List.of(account), pageable, 1));
+
+        Page<AccountStatusView> result = service.listAccountStatuses("CH-1", null, null, null, null, null, pageable);
+
+        assertThat(result.getTotalElements()).isEqualTo(1);
+        assertThat(result.getContent().get(0).getAccountNumber()).isEqualTo("CH-1");
+    }
+
+    @Test
+    void getAccountStatus_existingAccount_returnsMappedView() {
+        Account account = Account.builder()
+                .checkingAccountNumber("CH-88291")
+                .accountType(AccountType.CHECKING)
+                .accountStatus(AccountStatus.ACTIVE)
+                .createdDate(LocalDate.of(2020, 3, 10))
+                .customer(Customer.builder().firstName("Alice").lastName("Smith").dateOfBirth(LocalDate.of(1985, 4, 12)).build())
+                .build();
+        when(accountRepository.findByAccountNumber("CH-88291")).thenReturn(Optional.of(account));
+
+        Optional<AccountStatusView> result = service.getAccountStatus("CH-88291");
+
+        assertThat(result).isPresent();
+        assertThat(result.get().getAccountNumber()).isEqualTo("CH-88291");
+        assertThat(result.get().getFirstName()).isEqualTo("Alice");
+        assertThat(result.get().getLastName()).isEqualTo("Smith");
+        assertThat(result.get().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
+    }
+
+    @Test
+    void getAccountStatus_unknownAccount_returnsEmpty() {
+        when(accountRepository.findByAccountNumber("CH-does-not-exist")).thenReturn(Optional.empty());
+
+        Optional<AccountStatusView> result = service.getAccountStatus("CH-does-not-exist");
+
+        assertThat(result).isEmpty();
     }
 }

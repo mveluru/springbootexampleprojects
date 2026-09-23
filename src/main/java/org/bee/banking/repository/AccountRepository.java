@@ -50,14 +50,20 @@ public class AccountRepository {
 
     /**
      * Lists accounts (deduplicated - an account with both a checking and savings
-     * number would otherwise appear under each key), optionally filtered by status
-     * and/or a createdDate/closedDate range, sorted and paginated per {@code pageable}.
+     * number would otherwise appear under each key), optionally filtered by an exact
+     * account number, status, and/or a createdDate/closedDate range, sorted and
+     * paginated per {@code pageable}. When {@code accountNumber} is given, every other
+     * filter still applies - the result is a single-element (or empty) page rather than
+     * a special case, so callers get one consistent paginated shape either way.
      * Filtering/sorting/paging all happen in-memory since this is a mock store, not a
      * real query - fine for the seeded/demo data volumes here.
      */
-    public Page<Account> search(AccountStatus status, LocalDate createdFrom, LocalDate createdTo,
+    public Page<Account> search(String accountNumber, AccountStatus status, LocalDate createdFrom, LocalDate createdTo,
                                  LocalDate closedFrom, LocalDate closedTo, Pageable pageable) {
         List<Account> matching = new LinkedHashSet<>(dbMockStore.values()).stream()
+                .filter(account -> accountNumber == null
+                        || accountNumber.equalsIgnoreCase(account.getCheckingAccountNumber())
+                        || accountNumber.equalsIgnoreCase(account.getSavingAccountNumber()))
                 .filter(account -> status == null || account.getAccountStatus() == status)
                 .filter(account -> createdFrom == null
                         || (account.getCreatedDate() != null && !account.getCreatedDate().isBefore(createdFrom)))

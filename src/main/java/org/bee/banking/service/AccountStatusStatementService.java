@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 /**
  * Pulls accounts together with their status/lifecycle dates and owning customer's
@@ -25,7 +26,28 @@ import java.time.LocalDate;
 public class AccountStatusStatementService {
     private final AccountRepository accountRepository;
 
-    public Page<AccountStatusView> listAccountStatuses(AccountStatus status, LocalDate createdFrom, LocalDate createdTo,
+    /**
+     * Single-account counterpart to {@link #listAccountStatuses}: looks up one account
+     * by number and returns its flattened status/lifecycle view.
+     */
+    public Optional<AccountStatusView> getAccountStatus(String accountNumber) {
+        log.debug(BankingMessages.LOG_ACCOUNT_LOOKUP, accountNumber);
+        Optional<AccountStatusView> view = accountRepository.findByAccountNumber(accountNumber).map(this::toView);
+        if (view.isEmpty()) {
+            log.warn(BankingMessages.LOG_ACCOUNT_LOOKUP_FAILED, accountNumber);
+        }
+        return view;
+    }
+
+    /**
+     * Retrieves account names/details within the given createdDate/closedDate range.
+     * Conditional lookup: when {@code accountNumber} is provided, the result is
+     * narrowed to just that account (still subject to the date-range/status filters,
+     * so an out-of-range account yields an empty page rather than bypassing the
+     * range); when it's omitted/null, every account within the range is returned.
+     */
+    public Page<AccountStatusView> listAccountStatuses(String accountNumber, AccountStatus status,
+                                                       LocalDate createdFrom, LocalDate createdTo,
                                                        LocalDate closedFrom, LocalDate closedTo, Pageable pageable) {
         if (createdFrom != null && createdTo != null && createdFrom.isAfter(createdTo)) {
             String message = String.format(BankingMessages.CREATED_DATE_RANGE_INVALID, createdFrom, createdTo);
@@ -38,8 +60,8 @@ public class AccountStatusStatementService {
             throw new IllegalArgumentException(message);
         }
 
-        log.debug(BankingMessages.LOG_ACCOUNT_SEARCH, status, createdFrom, createdTo, closedFrom, closedTo, pageable.getPageNumber());
-        Page<Account> accounts = accountRepository.search(status, createdFrom, createdTo, closedFrom, closedTo, pageable);
+        log.debug(BankingMessages.LOG_ACCOUNT_SEARCH, accountNumber, status, createdFrom, createdTo, closedFrom, closedTo, pageable.getPageNumber());
+        Page<Account> accounts = accountRepository.search(accountNumber, status, createdFrom, createdTo, closedFrom, closedTo, pageable);
         return accounts.map(this::toView);
     }
 

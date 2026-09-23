@@ -1,9 +1,10 @@
-package org.bee.banking.statement;
+package org.bee.banking.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bee.banking.domain.Account;
 import org.bee.banking.domain.AccountStatus;
+import org.bee.banking.domain.AccountStatusView;
 import org.bee.banking.messages.BankingMessages;
 import org.bee.banking.repository.AccountRepository;
 import org.springframework.data.domain.Page;
@@ -25,7 +26,7 @@ public class AccountStatusStatementService {
     private final AccountRepository accountRepository;
 
     public Page<AccountStatusView> listAccountStatuses(AccountStatus status, LocalDate createdFrom, LocalDate createdTo,
-                                                         LocalDate closedFrom, LocalDate closedTo, Pageable pageable) {
+                                                       LocalDate closedFrom, LocalDate closedTo, Pageable pageable) {
         if (createdFrom != null && createdTo != null && createdFrom.isAfter(createdTo)) {
             String message = String.format(BankingMessages.CREATED_DATE_RANGE_INVALID, createdFrom, createdTo);
             log.warn(BankingMessages.LOG_ACCOUNT_SEARCH_REJECTED_DATE_RANGE, message);

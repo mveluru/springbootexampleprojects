@@ -1,10 +1,8 @@
 package org.bee.banking.statement;
 
-import org.bee.banking.domain.Account;
-import org.bee.banking.domain.AccountStatus;
-import org.bee.banking.domain.AccountType;
-import org.bee.banking.domain.Customer;
+import org.bee.banking.domain.*;
 import org.bee.banking.repository.AccountRepository;
+import org.bee.banking.service.AccountStatusStatementService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

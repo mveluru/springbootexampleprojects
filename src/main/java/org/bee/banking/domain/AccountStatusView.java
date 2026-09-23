@@ -1,10 +1,9 @@
-package org.bee.banking.statement;
+package org.bee.banking.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import org.bee.banking.domain.AccountStatus;
-import org.bee.banking.domain.AccountType;
+import org.bee.banking.service.AccountStatusStatementService;
 
 import java.time.LocalDate;
 

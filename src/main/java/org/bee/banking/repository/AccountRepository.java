@@ -12,10 +12,17 @@ import org.bee.banking.exception.InsufficientFundsException;
 import org.bee.banking.exception.MinBalanceException;
 import org.bee.banking.messages.BankingMessages;
 import org.bee.banking.rules.AccountConstraints;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,6 +46,56 @@ public class AccountRepository {
     public Optional<Account> findByAccountNumber(String accountNumber) {
         if (accountNumber == null) return Optional.empty();
         return Optional.ofNullable(dbMockStore.get(accountNumber));
+    }
+
+    /**
+     * Lists accounts (deduplicated - an account with both a checking and savings
+     * number would otherwise appear under each key), optionally filtered by status
+     * and/or a createdDate/closedDate range, sorted and paginated per {@code pageable}.
+     * Filtering/sorting/paging all happen in-memory since this is a mock store, not a
+     * real query - fine for the seeded/demo data volumes here.
+     */
+    public Page<Account> search(AccountStatus status, LocalDate createdFrom, LocalDate createdTo,
+                                 LocalDate closedFrom, LocalDate closedTo, Pageable pageable) {
+        List<Account> matching = new LinkedHashSet<>(dbMockStore.values()).stream()
+                .filter(account -> status == null || account.getAccountStatus() == status)
+                .filter(account -> createdFrom == null
+                        || (account.getCreatedDate() != null && !account.getCreatedDate().isBefore(createdFrom)))
+                .filter(account -> createdTo == null
+                        || (account.getCreatedDate() != null && !account.getCreatedDate().isAfter(createdTo)))
+                .filter(account -> closedFrom == null
+                        || (account.getClosedDate() != null && !account.getClosedDate().isBefore(closedFrom)))
+                .filter(account -> closedTo == null
+                        || (account.getClosedDate() != null && !account.getClosedDate().isAfter(closedTo)))
+                .sorted(comparatorFor(pageable.getSort()))
+                .toList();
+
+        int start = (int) pageable.getOffset();
+        if (start >= matching.size()) {
+            return new PageImpl<>(List.of(), pageable, matching.size());
+        }
+        int end = Math.min(start + pageable.getPageSize(), matching.size());
+        return new PageImpl<>(matching.subList(start, end), pageable, matching.size());
+    }
+
+    private Comparator<Account> comparatorFor(Sort sort) {
+        Comparator<Account> comparator = null;
+        for (Sort.Order order : sort) {
+            Comparator<Account> propertyComparator = switch (order.getProperty()) {
+                case "createdDate" -> Comparator.comparing(Account::getCreatedDate, Comparator.nullsLast(Comparator.naturalOrder()));
+                case "closedDate" -> Comparator.comparing(Account::getClosedDate, Comparator.nullsLast(Comparator.naturalOrder()));
+                case "accountStatus" -> Comparator.comparing(account -> account.getAccountStatus() == null ? "" : account.getAccountStatus().name());
+                case "checkingAccountNumber" -> Comparator.comparing(account -> account.getCheckingAccountNumber() == null ? "" : account.getCheckingAccountNumber());
+                case "savingAccountNumber" -> Comparator.comparing(account -> account.getSavingAccountNumber() == null ? "" : account.getSavingAccountNumber());
+                default -> throw new IllegalArgumentException(String.format(BankingMessages.UNSUPPORTED_SORT_PROPERTY, order.getProperty()));
+            };
+            if (order.isDescending()) {
+                propertyComparator = propertyComparator.reversed();
+            }
+            comparator = comparator == null ? propertyComparator : comparator.thenComparing(propertyComparator);
+        }
+        // Stable default order (insertion order into the map) when no sort was requested
+        return comparator == null ? (a, b) -> 0 : comparator;
     }
 
     /**

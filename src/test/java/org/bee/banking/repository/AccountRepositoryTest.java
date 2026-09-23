@@ -12,6 +12,9 @@ import org.bee.banking.exception.MinBalanceException;
 import org.bee.banking.rules.AccountConstraints;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -53,6 +56,18 @@ class AccountRepositoryTest {
                 .accountType(AccountType.CHECKING)
                 .customer(customer)
                 .build();
+    }
+
+    /**
+     * save() only defaults accountStatus/createdDate when absent, so pre-setting them
+     * here lets search() tests control exactly what each seeded test account looks like.
+     */
+    private Account seedCheckingWithDates(AccountStatus status, LocalDate createdDate, LocalDate closedDate) {
+        Account account = newCheckingAccount();
+        account.setAccountStatus(status);
+        account.setCreatedDate(createdDate);
+        account.setClosedDate(closedDate);
+        return accountRepository.save(account);
     }
 
     @Test
@@ -182,5 +197,77 @@ class AccountRepositoryTest {
     @Test
     void findByAccountNumber_unknownAccount_isEmpty() {
         assertThat(accountRepository.findByAccountNumber("CH-does-not-exist")).isEmpty();
+    }
+
+    @Test
+    void search_filtersByStatus_returnsOnlyMatchingAccounts() {
+        LocalDate day = LocalDate.of(2023, 5, 15);
+        seedCheckingWithDates(AccountStatus.ACTIVE, day, null);
+        seedCheckingWithDates(AccountStatus.ACTIVE, day, null);
+        seedCheckingWithDates(AccountStatus.CLOSED, day, day.plusMonths(1));
+
+        Page<Account> activeOnly = accountRepository.search(AccountStatus.ACTIVE, day, day, null, null, PageRequest.of(0, 10));
+
+        assertThat(activeOnly.getTotalElements()).isEqualTo(2);
+        assertThat(activeOnly.getContent()).allMatch(a -> a.getAccountStatus() == AccountStatus.ACTIVE);
+    }
+
+    @Test
+    void search_filtersByCreatedDateRange_excludesAccountsOutsideRange() {
+        seedCheckingWithDates(AccountStatus.ACTIVE, LocalDate.of(2023, 1, 1), null);
+        Account inRange = seedCheckingWithDates(AccountStatus.ACTIVE, LocalDate.of(2023, 6, 1), null);
+
+        Page<Account> result = accountRepository.search(null,
+                LocalDate.of(2023, 5, 1), LocalDate.of(2023, 12, 31), null, null, PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).containsExactly(inRange);
+    }
+
+    @Test
+    void search_filtersByClosedDateRange_excludesAccountsOutsideRange() {
+        LocalDate created = LocalDate.of(2023, 5, 15);
+        Account inRange = seedCheckingWithDates(AccountStatus.CLOSED, created, LocalDate.of(2023, 8, 1));
+        seedCheckingWithDates(AccountStatus.CLOSED, created, LocalDate.of(2023, 9, 15));
+
+        Page<Account> result = accountRepository.search(AccountStatus.CLOSED, null, null,
+                LocalDate.of(2023, 8, 1), LocalDate.of(2023, 8, 31), PageRequest.of(0, 10));
+
+        assertThat(result.getContent()).containsExactly(inRange);
+    }
+
+    @Test
+    void search_paginatesResults_withCorrectTotalsAndLastPage() {
+        LocalDate day = LocalDate.of(2024, 1, 1);
+        for (int i = 0; i < 5; i++) {
+            seedCheckingWithDates(AccountStatus.ACTIVE, day, null);
+        }
+
+        Page<Account> firstPage = accountRepository.search(null, day, day, null, null, PageRequest.of(0, 2));
+        Page<Account> lastPage = accountRepository.search(null, day, day, null, null, PageRequest.of(2, 2));
+
+        assertThat(firstPage.getContent()).hasSize(2);
+        assertThat(firstPage.getTotalElements()).isEqualTo(5);
+        assertThat(firstPage.getTotalPages()).isEqualTo(3);
+        assertThat(lastPage.getContent()).hasSize(1);
+    }
+
+    @Test
+    void search_sortByCreatedDateDescending_ordersNewestFirst() {
+        Account oldest = seedCheckingWithDates(AccountStatus.ACTIVE, LocalDate.of(2024, 2, 1), null);
+        Account middle = seedCheckingWithDates(AccountStatus.ACTIVE, LocalDate.of(2024, 2, 2), null);
+        Account newest = seedCheckingWithDates(AccountStatus.ACTIVE, LocalDate.of(2024, 2, 3), null);
+
+        Page<Account> result = accountRepository.search(null,
+                LocalDate.of(2024, 2, 1), LocalDate.of(2024, 2, 3), null, null,
+                PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdDate")));
+
+        assertThat(result.getContent()).containsExactly(newest, middle, oldest);
+    }
+
+    @Test
+    void search_unsupportedSortProperty_throwsIllegalArgumentException() {
+        assertThatThrownBy(() -> accountRepository.search(null, null, null, null, null,
+                PageRequest.of(0, 10, Sort.by("bogusField"))))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

@@ -3,6 +3,7 @@ package org.bee.banking.contoller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.bee.banking.domain.Account;
+import org.bee.banking.domain.AccountStatus;
 import org.bee.banking.domain.BankStatement;
 import org.bee.banking.domain.DepositForm;
 import org.bee.banking.request.AccountLookupRequest;
@@ -10,6 +11,11 @@ import org.bee.banking.request.AccountRegistrationRequest;
 import org.bee.banking.request.WithdrawalRequest;
 import org.bee.banking.service.BankStatementService;
 import org.bee.banking.service.ClientAccountService;
+import org.bee.banking.statement.AccountStatusStatementService;
+import org.bee.banking.statement.AccountStatusView;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +35,26 @@ import java.time.LocalDate;
 public class ClientAccountController {
     private final ClientAccountService accountService;
     private final BankStatementService bankStatementService;
+    private final AccountStatusStatementService accountStatusStatementService;
+
+    /**
+     * Scenario G: List/search accounts together with their status, lifecycle dates,
+     * and owning customer's name, optionally filtered by status and/or a
+     * createdDate/closedDate range, paginated.
+     * GET /api/accounts?status=CLOSED&createdFrom=2021-01-01&createdTo=2021-12-31&page=0&size=20&sort=createdDate,desc
+     */
+    @GetMapping
+    public ResponseEntity<Page<AccountStatusView>> listAccounts(
+            @RequestParam(required = false) AccountStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdTo,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closedFrom,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closedTo,
+            @PageableDefault(size = 20, sort = "createdDate") Pageable pageable) {
+        Page<AccountStatusView> accounts = accountStatusStatementService.listAccountStatuses(
+                status, createdFrom, createdTo, closedFrom, closedTo, pageable);
+        return ResponseEntity.ok(accounts);
+    }
 
     /**
      * Scenario A: Lookup customer profile information by Account Number

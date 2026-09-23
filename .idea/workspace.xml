@@ -5,7 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="500bfae8-b424-4f4d-b8ec-4b2725646d06" name="Changes" comment="Claude.md and configuration , setting.local.json etc">
+      <change beforePath="$PROJECT_DIR$/.claude/CLAUDE.md" beforeDir="false" afterPath="$PROJECT_DIR$/.claude/CLAUDE.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/contoller/ClientAccountController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/contoller/ClientAccountController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/messages/BankingMessages.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/messages/BankingMessages.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/repository/AccountRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/repository/AccountRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/service/ClientAccountService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/service/ClientAccountService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/bee/banking/repository/AccountRepositoryTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/bee/banking/repository/AccountRepositoryTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/bee/banking/service/ClientAccountServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/bee/banking/service/ClientAccountServiceTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -182,7 +190,7 @@
       <workItem from="1789490859106" duration="2743000" />
       <workItem from="1789612767360" duration="55487000" />
       <workItem from="1789851823700" duration="19964000" />
-      <workItem from="1790087877417" duration="6355000" />
+      <workItem from="1790087877417" duration="8536000" />
     </task>
     <task id="LOCAL-00009" summary="README.md updated">
       <option name="closed" value="true" />

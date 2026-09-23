@@ -56,6 +56,10 @@ banking:
     checking-minimum-balance: 25.00
     saving-minimum-balance: 100.00
     max-statement-range-months: 18
+  rate-limit:
+    enabled: true
+    requests-per-day: 1000
+    customer-header-name: X-Customer-Id
 
 resilience4j:
   circuitbreaker:

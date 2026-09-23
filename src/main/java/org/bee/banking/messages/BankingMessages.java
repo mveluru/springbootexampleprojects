@@ -95,6 +95,12 @@ public final class BankingMessages {
     // CustomerService log messages
     public static final String LOG_CUSTOMER_SAMPLE_RETURNED = "Returning sample customer record";
 
+    // Banking API gateway / rate limiter messages
+    public static final String RATE_LIMIT_CUSTOMER_HEADER_REQUIRED = "Missing required customer identifier header: %s";
+    public static final String RATE_LIMIT_DAILY_LIMIT_EXCEEDED = "Daily request limit exceeded for customer %s: max %d requests per day";
+    public static final String LOG_RATE_LIMIT_HEADER_MISSING = "Rate limit rejected request to {}: missing header {}";
+    public static final String LOG_RATE_LIMIT_EXCEEDED = "Rate limit exceeded for customer {} on {}: daily limit of {} requests reached";
+
     // Shared domain/request validation messages (Address, AccountRegistrationRequest,
     // WithdrawalRequest, WithdrawalForm, DepositForm)
     public static final String VALIDATION_STREET_REQUIRED = "Street address is required";

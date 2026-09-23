@@ -10,6 +10,7 @@ A Spring Boot 3 REST application demonstrating configuration properties binding 
 - **Configs API**: Exposes endpoints under `/v1/configs` to query live application, email, and SMS configurations.
 - **Product Catalog API**: Exposes endpoints under `/v1/product` to list, look up, and add products (in-memory catalog).
 - **Banking APIs**: Client/account lookup, registration, withdrawal, and deposit (`/v1/client`, `/v1/api/accounts`) — withdrawals and deposits are applied atomically per account and withdrawals are recorded to an in-memory history — plus async notification demos (`/notify`, `/report`) backed by `@Async`.
+- **Banking API Gateway & Rate Limiter**: Every banking endpoint (`/v1/api/accounts/**`, `/v1/client/**`, `/v1/payment/**`, `/notify`, `/notify-sms`, `/report`) sits behind a `Filter`-based gateway ingress layer that requires an `X-Customer-Id` header and caps each customer to a configurable number of requests per day (`banking.rate-limit`, default 1000/day) — see [Banking API gateway](#-banking-api-gateway--rate-limiter) below. Retail/events/configs endpoints are unaffected.
 - **Account Constraints**: Configurable business rules (`banking.constraints`) enforced on registration/withdrawal/deposit — minimum age to open an account, minimum balance retained after a withdrawal (checking/savings), and a maximum single cash-deposit amount.
 - **Bank Statement**: `/v1/api/accounts/{accountNumber}/statement` returns an account's deposit/withdrawal history for a given date range, capped by a configurable maximum range in months.
 - **Resilience Demo**: `/v1/payment/process` demonstrates a Resilience4j circuit breaker with jittered exponential-backoff retry around a simulated flaky downstream call.
@@ -71,6 +72,10 @@ banking:
     checking-minimum-balance: 25.00
     saving-minimum-balance: 100.00
     max-statement-range-months: 18
+  rate-limit:
+    enabled: true
+    requests-per-day: 1000
+    customer-header-name: X-Customer-Id
 
 resilience4j:
   circuitbreaker:
@@ -117,6 +122,8 @@ All REST endpoints are prefixed with `http://localhost:8081/brite`:
 
 ### Banking — clients, accounts & notifications
 
+> Every endpoint below requires an `X-Customer-Id` header and is subject to the per-customer daily rate limit — see [Banking API gateway & rate limiter](#banking-api-gateway--rate-limiter).
+
 | Method | Endpoint Path | Description |
 | :--- | :--- | :--- |
 | `GET` | `/v1/client/name` | Returns a sample customer record |
@@ -128,6 +135,15 @@ All REST endpoints are prefixed with `http://localhost:8081/brite`:
 | `GET` | `/v1/api/accounts/{accountNumber}/statement?beginDate=yyyy-MM-dd&endDate=yyyy-MM-dd` | Returns a bank statement (deposit/withdrawal history) for the account in the given range; `400` if the range exceeds the configured maximum months, `404` if the account doesn't exist |
 | `GET` | `/notify?name={name}` | Fire-and-forget async email notification demo |
 | `GET` | `/report` | Async task that returns a completed report string |
+
+### Banking API gateway & rate limiter
+
+`BankingRateLimitFilter` (`org.bee.banking.gateway`) is a servlet `Filter` registered only for the banking module's URL patterns (`/v1/api/accounts/*`, `/v1/client/*`, `/v1/payment/*`, `/notify`, `/notify-sms`, `/report`) — it runs before `DispatcherServlet`, so rejected requests never reach a controller. It acts as a lightweight API-gateway ingress layer with two responsibilities:
+
+1. **Customer identification** — every request must carry the header configured by `banking.rate-limit.customer-header-name` (default `X-Customer-Id`). Missing/blank header → `400` with a plain-text explanation.
+2. **Per-customer daily rate limit** — each customer ID is capped at `banking.rate-limit.requests-per-day` (default **1000**) requests per calendar day, tracked in-memory and reset at midnight. Exceeding it → `429 Too Many Requests`.
+
+Every response that reaches the filter (allowed or rejected) carries `X-RateLimit-Limit` and `X-RateLimit-Remaining` headers. Set `banking.rate-limit.enabled: false` to bypass the whole gateway (e.g. for local scripting). This is a single-instance, in-memory limiter (like the rest of the app's mock stores) — not a distributed rate limiter — and the customer ID is a caller-supplied header rather than an authenticated principal, since the app has no auth layer.
 
 ### Resilience demo — `/v1/payment`
 
@@ -219,14 +235,14 @@ curl -s -X POST http://localhost:8081/brite/v1/product/addproduct \
   -H "Content-Type: application/json" \
   -d '{"productId":"200","productName":"Test Widget","quantity":"5","price":42.5}'
 
-# Look Up a Client Account
+# Look Up a Client Account (banking endpoints require X-Customer-Id, rate-limited to 1000/day)
 curl -s -X POST http://localhost:8081/brite/v1/api/accounts/lookup \
-  -H "Content-Type: application/json" \
+  -H "Content-Type: application/json" -H "X-Customer-Id: demo-customer-1" \
   -d '{"accountNumber":"CH-88291"}'
 
 # Register a New Client Account
 curl -s -X POST http://localhost:8081/brite/v1/api/accounts/register \
-  -H "Content-Type: application/json" \
+  -H "Content-Type: application/json" -H "X-Customer-Id: demo-customer-1" \
   -d '{
         "firstName":"David","lastName":"Miller","dateOfBirth":"08/19/1994",
         "street":"789 Pine Rd","city":"Houston","state":"TX","zip":"77001",
@@ -235,7 +251,7 @@ curl -s -X POST http://localhost:8081/brite/v1/api/accounts/register \
 
 # Withdraw From a Client Account
 curl -s -X POST http://localhost:8081/brite/v1/api/accounts/withdraw \
-  -H "Content-Type: application/json" \
+  -H "Content-Type: application/json" -H "X-Customer-Id: demo-customer-1" \
   -d '{
         "accountNumber":"CH-88291","accountType":"CHECKING","withdrawAmount":100.00,
         "firstName":"Alice","lastName":"Smith","street":"123 Main St","city":"Austin",
@@ -244,21 +260,26 @@ curl -s -X POST http://localhost:8081/brite/v1/api/accounts/withdraw \
 
 # Deposit Into a Client Account
 curl -s -X POST http://localhost:8081/brite/v1/api/accounts/deposit \
-  -H "Content-Type: application/json" \
+  -H "Content-Type: application/json" -H "X-Customer-Id: demo-customer-1" \
   -d '{
         "accountNumber":"CH-88291","amount":250.00,"accountType":"CHECKING","depositType":"cash",
         "firstName":"Alice","lastName":"Smith","street":"123 Main St","city":"Austin",
         "state":"TX","zip":"78701","addressLine1":"Apt 4B"
       }'
 
+# Close a Client Account
+curl -s -X POST http://localhost:8081/brite/v1/api/accounts/CH-88291/close \
+  -H "X-Customer-Id: demo-customer-1"
+
 # Get a Bank Statement
-curl -s "http://localhost:8081/brite/v1/api/accounts/CH-88291/statement?beginDate=2026-01-01&endDate=2026-12-31"
+curl -s "http://localhost:8081/brite/v1/api/accounts/CH-88291/statement?beginDate=2026-01-01&endDate=2026-12-31" \
+  -H "X-Customer-Id: demo-customer-1"
 
 # Trigger a Fire-and-Forget Async Notification
-curl -s "http://localhost:8081/brite/notify?name=Alice"
+curl -s "http://localhost:8081/brite/notify?name=Alice" -H "X-Customer-Id: demo-customer-1"
 
 # Call the Resilience4j Circuit Breaker + Retry Demo (run a few times to see variation)
-curl -s -X POST http://localhost:8081/brite/v1/payment/process
+curl -s -X POST http://localhost:8081/brite/v1/payment/process -H "X-Customer-Id: demo-customer-1"
 
 # Submit a v1 Event
 curl -s -X POST http://localhost:8081/brite/api/events \
@@ -299,3 +320,5 @@ mvn test
 | `SpringBootProjectsApplicationTests` | Application context load + actuator health, liveness, and readiness probes |
 | `AccountRepositoryTest` | Plain unit test (no Spring context/MySQL) — account creation defaults, ACTIVE/CLOSED status lifecycle, withdraw/deposit balance rules |
 | `ClientAccountServiceTest` | Plain unit test (no Spring context/MySQL) — registration age gating, withdraw/deposit input validation |
+| `CustomerRateLimiterTest` | Plain unit test (no Spring context/MySQL) — per-customer daily counter: decrements, blocks past the limit, independent per customer |
+| `BankingRateLimitFilterTest` | Plain unit test (no Spring context/MySQL) — missing-header rejection, within-limit pass-through + headers, over-limit `429` |

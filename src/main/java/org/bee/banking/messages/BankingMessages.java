@@ -14,6 +14,8 @@ public final class BankingMessages {
     public static final String DEPOSIT_TYPE_INVALID = "Deposit type must be 'cash' or 'check'";
     public static final String INSUFFICIENT_FUNDS = "Insufficient funds in account %s";
     public static final String ACCOUNT_NOT_FOUND = "Account not found: %s";
+    public static final String ACCOUNT_CLOSED = "Account %s is closed and cannot be used for transactions";
+    public static final String ACCOUNT_ALREADY_CLOSED = "Account %s is already closed";
     public static final String MINIMUM_AGE_VIOLATION = "Customer must be at least %d years old to open an account";
     public static final String MAX_CASH_DEPOSIT_EXCEEDED = "Cash deposits cannot exceed %s";
     public static final String MIN_BALANCE_VIOLATION = "Withdrawal declined: account %s must retain a minimum balance of %s";
@@ -30,6 +32,11 @@ public final class BankingMessages {
     public static final String LOG_DEPOSIT_ACCOUNT_NOT_FOUND = "Deposit failed: account {} not found";
     public static final String LOG_DEPOSIT_SUCCESS = "Deposited {} into {} account {}";
     public static final String LOG_WITHDRAWAL_BELOW_MINIMUM_BALANCE = "Withdrawal of {} rejected for account {}: resulting balance {} would be below minimum {}";
+    public static final String LOG_WITHDRAWAL_REJECTED_CLOSED = "Withdrawal rejected: account {} is closed";
+    public static final String LOG_DEPOSIT_REJECTED_CLOSED = "Deposit rejected: account {} is closed";
+    public static final String LOG_ACCOUNT_CLOSED = "Closed account {}";
+    public static final String LOG_ACCOUNT_CLOSE_REJECTED_ALREADY_CLOSED = "Close rejected: account {} is already closed";
+    public static final String LOG_ACCOUNT_CLOSE_ACCOUNT_NOT_FOUND = "Close failed: account {} not found";
 
     // WithdrawalRepository log messages
     public static final String LOG_WITHDRAWAL_HISTORY_RECORDED = "Recorded withdrawal history entry for account {}: amount={}, status={}";
@@ -62,6 +69,7 @@ public final class BankingMessages {
 
     // BankingExceptionHandler log messages
     public static final String LOG_HANDLER_ACCOUNT_NOT_FOUND = "Account not found: {}";
+    public static final String LOG_HANDLER_ACCOUNT_CLOSED = "Account closed: {}";
     public static final String LOG_HANDLER_INSUFFICIENT_FUNDS = "Insufficient funds: {}";
     public static final String LOG_HANDLER_INVALID_REQUEST = "Invalid banking request: {}";
     public static final String LOG_HANDLER_AGE_VIOLATION = "Age constraint violated: {}";

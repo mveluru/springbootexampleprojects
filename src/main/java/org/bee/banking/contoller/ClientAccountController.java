@@ -74,6 +74,16 @@ public class ClientAccountController {
     }
 
     /**
+     * Scenario F: Close an existing checking or savings account
+     * POST /api/accounts/{accountNumber}/close
+     */
+    @PostMapping("/{accountNumber}/close")
+    public ResponseEntity<Account> closeAccount(@PathVariable String accountNumber) {
+        Account closedAccount = accountService.closeAccount(accountNumber);
+        return ResponseEntity.ok(closedAccount);
+    }
+
+    /**
      * Scenario E: Generate a bank statement for an account within a date range
      * GET /api/accounts/{accountNumber}/statement?beginDate=yyyy-MM-dd&endDate=yyyy-MM-dd
      */

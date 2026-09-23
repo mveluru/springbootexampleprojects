@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -19,5 +20,9 @@ public class Account implements Serializable {
     BigDecimal savingBalance;
     @Enumerated(EnumType.STRING)
     private AccountType accountType;
+    @Enumerated(EnumType.STRING)
+    private AccountStatus accountStatus;
+    private LocalDate createdDate;
+    private LocalDate closedDate;
     Customer customer;
 }

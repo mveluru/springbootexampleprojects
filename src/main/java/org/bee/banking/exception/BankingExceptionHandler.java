@@ -19,6 +19,15 @@ public class BankingExceptionHandler {
                 .body(ex.getMessage());
     }
 
+    @ExceptionHandler(AccountClosedException.class)
+    public ResponseEntity<String> handleAccountClosed(
+            AccountClosedException ex) {
+        log.warn(BankingMessages.LOG_HANDLER_ACCOUNT_CLOSED, ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ex.getMessage());
+    }
+
     @ExceptionHandler(InsufficientFundsException.class)
     public ResponseEntity<String> handleInsufficientFunds(
             InsufficientFundsException ex) {

@@ -54,6 +54,14 @@ public class ClientAccountService {
     }
 
     /**
+     * Closes an existing checking or savings account, marking it CLOSED
+     * and stamping today as the closure date.
+     */
+    public Account closeAccount(String accountNumber) {
+        return accountRepository.closeAccount(accountNumber);
+    }
+
+    /**
      * Flow B: Register and save brand new profiles dynamically
      */
     public Account registerNewClientAccount(AccountRegistrationRequest request) {

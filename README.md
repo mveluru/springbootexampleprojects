@@ -114,8 +114,9 @@ All REST endpoints are prefixed with `http://localhost:8081/brite`:
 | `GET` | `/v1/client/name` | Returns a sample customer record |
 | `POST` | `/v1/api/accounts/lookup` | Looks up an account by account number; `404` if not found |
 | `POST` | `/v1/api/accounts/register` | Registers a new customer + account |
-| `POST` | `/v1/api/accounts/withdraw` | Withdraws funds from a checking/savings account; `400` on insufficient funds or mismatched account type, `404` if the account doesn't exist |
-| `POST` | `/v1/api/accounts/deposit` | Deposits funds into a checking/savings account; `400` on invalid amount/deposit type, mismatched account type, or a cash amount over the configured maximum, `404` if the account doesn't exist |
+| `POST` | `/v1/api/accounts/withdraw` | Withdraws funds from a checking/savings account; `400` on insufficient funds, mismatched account type, or a `CLOSED` account, `404` if the account doesn't exist |
+| `POST` | `/v1/api/accounts/deposit` | Deposits funds into a checking/savings account; `400` on invalid amount/deposit type, mismatched account type, a cash amount over the configured maximum, or a `CLOSED` account, `404` if the account doesn't exist |
+| `POST` | `/v1/api/accounts/{accountNumber}/close` | Closes a checking/savings account (status `ACTIVE` → `CLOSED`, stamps `closedDate`); `400` if already closed, `404` if the account doesn't exist |
 | `GET` | `/v1/api/accounts/{accountNumber}/statement?beginDate=yyyy-MM-dd&endDate=yyyy-MM-dd` | Returns a bank statement (deposit/withdrawal history) for the account in the given range; `400` if the range exceeds the configured maximum months, `404` if the account doesn't exist |
 | `GET` | `/notify?name={name}` | Fire-and-forget async email notification demo |
 | `GET` | `/report` | Async task that returns a completed report string |

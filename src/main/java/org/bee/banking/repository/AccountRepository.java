@@ -2,9 +2,11 @@ package org.bee.banking.repository;
 
 import lombok.extern.slf4j.Slf4j;
 import org.bee.banking.domain.Account;
+import org.bee.banking.domain.AccountStatus;
 import org.bee.banking.domain.AccountType;
 import org.bee.banking.domain.Address;
 import org.bee.banking.domain.Customer;
+import org.bee.banking.exception.AccountClosedException;
 import org.bee.banking.exception.AccountNotFoundException;
 import org.bee.banking.exception.InsufficientFundsException;
 import org.bee.banking.exception.MinBalanceException;
@@ -43,6 +45,14 @@ public class AccountRepository {
      * Simulation of database save()
      */
     public Account save(Account account) {
+        // Newly created accounts start out ACTIVE with today as their creation date
+        if (account.getAccountStatus() == null) {
+            account.setAccountStatus(AccountStatus.ACTIVE);
+        }
+        if (account.getCreatedDate() == null) {
+            account.setCreatedDate(LocalDate.now());
+        }
+
         // Generate mock account numbers if they don't exist yet
         if (account.getCheckingAccountNumber() == null && account.getSavingAccountNumber() == null) {
             // Prefix must be "CH" or "SV" - withdraw/deposit resolve account type from it
@@ -88,6 +98,10 @@ public class AccountRepository {
      */
     public Account withdraw(String accountNumber, AccountType accountType, BigDecimal amount) {
         Account updated = dbMockStore.computeIfPresent(accountNumber, (key, account) -> {
+            if (account.getAccountStatus() == AccountStatus.CLOSED) {
+                log.warn(BankingMessages.LOG_WITHDRAWAL_REJECTED_CLOSED, accountNumber);
+                throw new AccountClosedException(String.format(BankingMessages.ACCOUNT_CLOSED, accountNumber));
+            }
             BigDecimal currentBalance = accountType == AccountType.CHECKING
                     ? account.getCheckingBalance()
                     : account.getSavingBalance();
@@ -124,6 +138,10 @@ public class AccountRepository {
      */
     public Account deposit(String accountNumber, AccountType accountType, BigDecimal amount) {
         Account updated = dbMockStore.computeIfPresent(accountNumber, (key, account) -> {
+            if (account.getAccountStatus() == AccountStatus.CLOSED) {
+                log.warn(BankingMessages.LOG_DEPOSIT_REJECTED_CLOSED, accountNumber);
+                throw new AccountClosedException(String.format(BankingMessages.ACCOUNT_CLOSED, accountNumber));
+            }
             if (accountType == AccountType.CHECKING) {
                 BigDecimal currentBalance = account.getCheckingBalance() != null ? account.getCheckingBalance() : BigDecimal.ZERO;
                 account.setCheckingBalance(currentBalance.add(amount));
@@ -141,6 +159,28 @@ public class AccountRepository {
         return updated;
     }
 
+
+    /**
+     * Marks an account CLOSED and stamps the closure date. Idempotent operations
+     * (withdraw/deposit) already check status, so closing just flips the flag here.
+     */
+    public Account closeAccount(String accountNumber) {
+        Account updated = dbMockStore.computeIfPresent(accountNumber, (key, account) -> {
+            if (account.getAccountStatus() == AccountStatus.CLOSED) {
+                log.warn(BankingMessages.LOG_ACCOUNT_CLOSE_REJECTED_ALREADY_CLOSED, accountNumber);
+                throw new AccountClosedException(String.format(BankingMessages.ACCOUNT_ALREADY_CLOSED, accountNumber));
+            }
+            account.setAccountStatus(AccountStatus.CLOSED);
+            account.setClosedDate(LocalDate.now());
+            return account;
+        });
+        if (updated == null) {
+            log.warn(BankingMessages.LOG_ACCOUNT_CLOSE_ACCOUNT_NOT_FOUND, accountNumber);
+            throw new AccountNotFoundException(String.format(BankingMessages.ACCOUNT_NOT_FOUND, accountNumber));
+        }
+        log.info(BankingMessages.LOG_ACCOUNT_CLOSED, accountNumber);
+        return updated;
+    }
 
     /**
      * Seeds dummy profiles ready for immediate lookup
@@ -164,6 +204,8 @@ public class AccountRepository {
                 .checkingAccountNumber("CH-88291")
                 .checkingBalance(new BigDecimal("2450.75"))
                 .accountType(AccountType.CHECKING)
+                .accountStatus(AccountStatus.ACTIVE)
+                .createdDate(LocalDate.of(2020, 3, 10))
                 .customer(cust1)
                 .build();
 
@@ -185,6 +227,8 @@ public class AccountRepository {
                 .savingAccountNumber("SV-44102")
                 .savingBalance(new BigDecimal("12800.00"))
                 .accountType(AccountType.SAVINGS)
+                .accountStatus(AccountStatus.ACTIVE)
+                .createdDate(LocalDate.of(2019, 7, 22))
                 .customer(cust2)
                 .build();
 
@@ -196,7 +240,8 @@ public class AccountRepository {
         seedChecking("CH-10001", new BigDecimal("3200.50"), "Carol", "Davis", LocalDate.of(1978, 3, 15), "500 5th Ave", "Denver", "CO", "80202");
         seedChecking("CH-10002", new BigDecimal("1875.20"), "David", "Miller", LocalDate.of(1994, 8, 19), "789 Pine Rd", "Houston", "TX", "77001");
         seedChecking("CH-10003", new BigDecimal("4620.00"), "Emma", "Wilson", LocalDate.of(1988, 12, 1), "200 2nd St", "Seattle", "WA", "98101");
-        seedChecking("CH-10004", new BigDecimal("980.35"), "Frank", "Garcia", LocalDate.of(1975, 6, 23), "100 Ocean Dr", "Miami", "FL", "33101");
+        seedChecking("CH-10004", new BigDecimal("980.35"), "Frank", "Garcia", LocalDate.of(1975, 6, 23), "100 Ocean Dr", "Miami", "FL", "33101",
+                AccountStatus.CLOSED, LocalDate.of(2022, 4, 1), LocalDate.of(2025, 1, 15));
         seedChecking("CH-10005", new BigDecimal("6120.75"), "Grace", "Lee", LocalDate.of(1990, 1, 30), "300 Lake Shore Dr", "Chicago", "IL", "60601");
         seedChecking("CH-10006", new BigDecimal("2340.60"), "Henry", "Martinez", LocalDate.of(1982, 9, 5), "150 Desert Rd", "Phoenix", "AZ", "85001");
         seedChecking("CH-10007", new BigDecimal("1500.00"), "Ivy", "Chen", LocalDate.of(1996, 4, 11), "45 Beacon St", "Boston", "MA", "02101");
@@ -208,7 +253,8 @@ public class AccountRepository {
         seedSavings("SV-20001", new BigDecimal("15200.00"), "Maria", "Rodriguez", LocalDate.of(1980, 5, 19), "12 Elm St", "Dallas", "TX", "75201");
         seedSavings("SV-20002", new BigDecimal("8900.50"), "Noah", "Anderson", LocalDate.of(1992, 10, 3), "88 Broadway", "San Diego", "CA", "92101");
         seedSavings("SV-20003", new BigDecimal("22000.75"), "Olivia", "Harris", LocalDate.of(1987, 3, 22), "5 Music Row", "Nashville", "TN", "37201");
-        seedSavings("SV-20004", new BigDecimal("5600.30"), "Peter", "Clark", LocalDate.of(1976, 12, 15), "300 High St", "Columbus", "OH", "43201");
+        seedSavings("SV-20004", new BigDecimal("5600.30"), "Peter", "Clark", LocalDate.of(1976, 12, 15), "300 High St", "Columbus", "OH", "43201",
+                AccountStatus.CLOSED, LocalDate.of(2021, 9, 12), LocalDate.of(2024, 11, 30));
         seedSavings("SV-20005", new BigDecimal("13400.00"), "Quinn", "Lewis", LocalDate.of(1995, 6, 9), "700 Congress Ave", "Austin", "TX", "78702");
         seedSavings("SV-20006", new BigDecimal("9800.60"), "Rachel", "Walker", LocalDate.of(1983, 8, 27), "40 Trade St", "Charlotte", "NC", "28201");
         seedSavings("SV-20007", new BigDecimal("30500.00"), "Samuel", "Young", LocalDate.of(1971, 1, 12), "120 Fremont St", "Las Vegas", "NV", "89101");
@@ -219,12 +265,22 @@ public class AccountRepository {
 
     private void seedChecking(String accountNumber, BigDecimal balance, String firstName, String lastName,
                                LocalDate dateOfBirth, String street, String city, String state, String zip) {
+        seedChecking(accountNumber, balance, firstName, lastName, dateOfBirth, street, city, state, zip,
+                AccountStatus.ACTIVE, LocalDate.of(2021, 6, 1), null);
+    }
+
+    private void seedChecking(String accountNumber, BigDecimal balance, String firstName, String lastName,
+                               LocalDate dateOfBirth, String street, String city, String state, String zip,
+                               AccountStatus accountStatus, LocalDate createdDate, LocalDate closedDate) {
         Address address = Address.builder().street(street).city(city).state(state).zip(zip).addressLine1(street).country("USA").build();
         Customer customer = Customer.builder().firstName(firstName).lastName(lastName).dateOfBirth(dateOfBirth).address(address).build();
         Account account = Account.builder()
                 .checkingAccountNumber(accountNumber)
                 .checkingBalance(balance)
                 .accountType(AccountType.CHECKING)
+                .accountStatus(accountStatus)
+                .createdDate(createdDate)
+                .closedDate(closedDate)
                 .customer(customer)
                 .build();
         dbMockStore.put(accountNumber, account);
@@ -232,12 +288,22 @@ public class AccountRepository {
 
     private void seedSavings(String accountNumber, BigDecimal balance, String firstName, String lastName,
                               LocalDate dateOfBirth, String street, String city, String state, String zip) {
+        seedSavings(accountNumber, balance, firstName, lastName, dateOfBirth, street, city, state, zip,
+                AccountStatus.ACTIVE, LocalDate.of(2021, 6, 1), null);
+    }
+
+    private void seedSavings(String accountNumber, BigDecimal balance, String firstName, String lastName,
+                              LocalDate dateOfBirth, String street, String city, String state, String zip,
+                              AccountStatus accountStatus, LocalDate createdDate, LocalDate closedDate) {
         Address address = Address.builder().street(street).city(city).state(state).zip(zip).addressLine1(street).country("USA").build();
         Customer customer = Customer.builder().firstName(firstName).lastName(lastName).dateOfBirth(dateOfBirth).address(address).build();
         Account account = Account.builder()
                 .savingAccountNumber(accountNumber)
                 .savingBalance(balance)
                 .accountType(AccountType.SAVINGS)
+                .accountStatus(accountStatus)
+                .createdDate(createdDate)
+                .closedDate(closedDate)
                 .customer(customer)
                 .build();
         dbMockStore.put(accountNumber, account);

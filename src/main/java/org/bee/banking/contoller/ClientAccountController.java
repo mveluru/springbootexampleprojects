@@ -59,19 +59,6 @@ public class ClientAccountController {
     }
 
     /**
-     * Scenario H: Look up a single account's status/lifecycle info by account number
-     * GET /api/accounts/{accountNumber}/status
-     */
-    @GetMapping("/{accountNumber}/status")
-    public ResponseEntity<?> accountStatus(@PathVariable String accountNumber) {
-        return accountStatusStatementService.getAccountStatus(accountNumber)
-                .<ResponseEntity<?>>map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity
-                        .status(HttpStatus.NOT_FOUND)
-                        .body("Account number not found in our records."));
-    }
-
-    /**
      * Scenario A: Lookup customer profile information by Account Number
      * POST /api/accounts/lookup
      */

@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -129,34 +128,5 @@ class AccountStatusStatementServiceTest {
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent().get(0).getAccountNumber()).isEqualTo("CH-1");
-    }
-
-    @Test
-    void getAccountStatus_existingAccount_returnsMappedView() {
-        Account account = Account.builder()
-                .checkingAccountNumber("CH-88291")
-                .accountType(AccountType.CHECKING)
-                .accountStatus(AccountStatus.ACTIVE)
-                .createdDate(LocalDate.of(2020, 3, 10))
-                .customer(Customer.builder().firstName("Alice").lastName("Smith").dateOfBirth(LocalDate.of(1985, 4, 12)).build())
-                .build();
-        when(accountRepository.findByAccountNumber("CH-88291")).thenReturn(Optional.of(account));
-
-        Optional<AccountStatusView> result = service.getAccountStatus("CH-88291");
-
-        assertThat(result).isPresent();
-        assertThat(result.get().getAccountNumber()).isEqualTo("CH-88291");
-        assertThat(result.get().getFirstName()).isEqualTo("Alice");
-        assertThat(result.get().getLastName()).isEqualTo("Smith");
-        assertThat(result.get().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
-    }
-
-    @Test
-    void getAccountStatus_unknownAccount_returnsEmpty() {
-        when(accountRepository.findByAccountNumber("CH-does-not-exist")).thenReturn(Optional.empty());
-
-        Optional<AccountStatusView> result = service.getAccountStatus("CH-does-not-exist");
-
-        assertThat(result).isEmpty();
     }
 }

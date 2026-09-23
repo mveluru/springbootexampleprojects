@@ -128,7 +128,6 @@ All REST endpoints are prefixed with `http://localhost:8081/brite`:
 | :--- | :--- | :--- |
 | `GET` | `/v1/client/name` | Returns a sample customer record |
 | `GET` | `/v1/api/accounts?accountNumber=&status=&createdFrom=&createdTo=&closedFrom=&closedTo=&page=&size=&sort=` | Retrieves account names/details within a createdDate/closedDate range, paginated. All filters optional. **Conditional lookup**: if `accountNumber` is given, only that account is returned (still subject to the other filters — an out-of-range match yields an empty page, not a bypass); if omitted/null, every account within the range is returned. Other filters: `status` (`ACTIVE`/`CLOSED`), `createdFrom`/`createdTo` and `closedFrom`/`closedTo` (inclusive `yyyy-MM-dd` ranges), standard Spring Data `page`/`size`/`sort` (sortable by `createdDate`, `closedDate`, `accountStatus`, `checkingAccountNumber`, `savingAccountNumber`; default `size=20`, sorted by `createdDate` ascending). Returns a Spring Data `Page<AccountStatusView>` envelope (`content`, `totalElements`, `totalPages`, etc) — each row is flattened to `accountNumber`, `accountType`, `accountStatus`, `createdDate`, `closedDate`, `firstName`, `lastName`, not the full nested `Account`/`Customer`. `400` if a `*From` date is after its `*To` date or an unsupported `sort` property is given |
-| `GET` | `/v1/api/accounts/{accountNumber}/status` | Single-account counterpart to the search above — returns one `AccountStatusView` for the given account number; `404` if the account doesn't exist |
 | `POST` | `/v1/api/accounts/lookup` | Looks up an account by account number; `404` if not found |
 | `POST` | `/v1/api/accounts/register` | Registers a new customer + account |
 | `POST` | `/v1/api/accounts/withdraw` | Withdraws funds from a checking/savings account; `400` on insufficient funds, mismatched account type, or a `CLOSED` account, `404` if the account doesn't exist |
@@ -245,9 +244,6 @@ curl -s -H "X-Customer-Id: demo-customer-1" \
 curl -s -H "X-Customer-Id: demo-customer-1" \
   "http://localhost:8081/brite/v1/api/accounts?accountNumber=CH-88291&createdFrom=2020-01-01&createdTo=2020-12-31"
 
-# Get a Single Account's Status
-curl -s -H "X-Customer-Id: demo-customer-1" "http://localhost:8081/brite/v1/api/accounts/CH-88291/status"
-
 # Look Up a Client Account (banking endpoints require X-Customer-Id, rate-limited to 1000/day)
 curl -s -X POST http://localhost:8081/brite/v1/api/accounts/lookup \
   -H "Content-Type: application/json" -H "X-Customer-Id: demo-customer-1" \
@@ -333,6 +329,6 @@ mvn test
 | `SpringBootProjectsApplicationTests` | Application context load + actuator health, liveness, and readiness probes |
 | `AccountRepositoryTest` | Plain unit test (no Spring context/MySQL) — account creation defaults, ACTIVE/CLOSED status lifecycle, withdraw/deposit balance rules, account search/pagination/sorting/date-range filters, conditional accountNumber filter |
 | `ClientAccountServiceTest` | Plain unit test (no Spring context/MySQL) — registration age gating, withdraw/deposit input validation |
-| `AccountStatusStatementServiceTest` | Plain unit test (no Spring context/MySQL) — account search date-range validation, Account → AccountStatusView mapping (checking vs savings account number, customer name), single-account status lookup (found/not-found), conditional accountNumber pass-through |
+| `AccountStatusStatementServiceTest` | Plain unit test (no Spring context/MySQL) — account search date-range validation, Account → AccountStatusView mapping (checking vs savings account number, customer name), conditional accountNumber pass-through |
 | `CustomerRateLimiterTest` | Plain unit test (no Spring context/MySQL) — per-customer daily counter: decrements, blocks past the limit, independent per customer |
 | `BankingRateLimitFilterTest` | Plain unit test (no Spring context/MySQL) — missing-header rejection, within-limit pass-through + headers, over-limit `429` |

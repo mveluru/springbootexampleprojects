@@ -12,7 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Optional;
 
 /**
  * Pulls accounts together with their status/lifecycle dates and owning customer's
@@ -25,19 +24,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AccountStatusStatementService {
     private final AccountRepository accountRepository;
-
-    /**
-     * Single-account counterpart to {@link #listAccountStatuses}: looks up one account
-     * by number and returns its flattened status/lifecycle view.
-     */
-    public Optional<AccountStatusView> getAccountStatus(String accountNumber) {
-        log.debug(BankingMessages.LOG_ACCOUNT_LOOKUP, accountNumber);
-        Optional<AccountStatusView> view = accountRepository.findByAccountNumber(accountNumber).map(this::toView);
-        if (view.isEmpty()) {
-            log.warn(BankingMessages.LOG_ACCOUNT_LOOKUP_FAILED, accountNumber);
-        }
-        return view;
-    }
 
     /**
      * Retrieves account names/details within the given createdDate/closedDate range.

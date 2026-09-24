@@ -7,6 +7,7 @@ import org.bee.banking.domain.AccountStatus;
 import org.bee.banking.domain.AccountStatusView;
 import org.bee.banking.messages.BankingMessages;
 import org.bee.banking.repository.AccountRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,9 @@ public class AccountStatusStatementService {
     /** Default lookback window applied when neither createdFrom nor createdTo is given. */
     public static final int DEFAULT_LOOKBACK_MONTHS = 18;
 
+    /** Shared with ClientAccountService's @CacheEvict on register/close - see application.yml for TTL (10m). */
+    public static final String ACCOUNT_SEARCH_CACHE = "accountSearch";
+
     private final AccountRepository accountRepository;
 
     /**
@@ -38,7 +42,13 @@ public class AccountStatusStatementService {
      * result is narrowed to just that account (still subject to the resolved date-range/
      * status filters, so an out-of-range account yields an empty page rather than
      * bypassing the range); when it's omitted/null, every matching account is returned.
+     * <p>
+     * Cached for 10 minutes (see {@code spring.cache.caffeine.spec} in application.yml)
+     * since {@link AccountStatusView} never exposes balance - it's only invalidated by
+     * {@code ClientAccountService.registerNewClientAccount}/{@code closeAccount}, the
+     * only operations that change a field this view actually shows.
      */
+    @Cacheable(cacheNames = ACCOUNT_SEARCH_CACHE)
     public Page<AccountStatusView> listAccountStatuses(String accountNumber, AccountStatus status,
                                                        LocalDate createdFrom, LocalDate createdTo,
                                                        LocalDate closedFrom, LocalDate closedTo,

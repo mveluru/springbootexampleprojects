@@ -17,6 +17,8 @@ A Spring Boot 3 REST application demonstrating configuration properties binding 
 - **Event Ingestion**: `/api/events` accepts versioned event payloads validated against a JSON Schema (`event-v1.json`) and persisted via Spring Data JPA.
 - **API Versioning Demo**: `/apiversion` illustrates URI-, query-param-, header-, and content-negotiation-based API versioning strategies.
 - **Actuator Monitoring**: Integrated Spring Boot Actuator exposing health status under `/actuator/health`.
+- **Endpoint Execution-Time Logging**: A Spring AOP `@Aspect` (`ExecutionTimeLoggingAspect`, `org.bee.common.logging`) wraps every `@RestController` method app-wide and logs its execution time in milliseconds — no code changes needed per controller.
+- **Account Search Caching**: `GET /v1/api/accounts` results are cached for 10 minutes via Spring's `@Cacheable` (Caffeine, `spring.cache.caffeine.spec: expireAfterWrite=10m`), evicted whenever an account is registered or closed.
 - **Global Exception Handling**: Centralized exception handling using `@ControllerAdvice`, with all exception and validation messages centralized in `BankingMessages`.
 - **Structured Logging**: Slf4j logging across the banking module — info logs for successful operations, warn logs for validation/business rejections (insufficient funds, account not found, etc.) — with log message templates also centralized in `BankingMessages`.
 - **Database Integration**: MySQL datasource integration with Hibernate / Spring Data JPA.
@@ -59,6 +61,11 @@ management:
 spring:
   profiles:
     active: dev
+  cache:
+    type: caffeine
+    cache-names: accountSearch
+    caffeine:
+      spec: expireAfterWrite=10m
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/db_example?useSSL=false
@@ -339,3 +346,5 @@ mvn test
 | `AccountStatusStatementServiceTest` | Plain unit test (no Spring context/MySQL) — account search date-range validation, Account → AccountStatusView mapping (checking vs savings account number, customer name), conditional accountNumber pass-through, default/overridden `months` lookback window |
 | `CustomerRateLimiterTest` | Plain unit test (no Spring context/MySQL) — per-customer daily counter: decrements, blocks past the limit, independent per customer |
 | `BankingRateLimitFilterTest` | Plain unit test (no Spring context/MySQL) — missing-header rejection, within-limit pass-through + headers, over-limit `429` |
+| `ExecutionTimeLoggingAspectTest` | Plain unit test (no Spring context/MySQL) — the `@Around` advice returns the join point's result and propagates exceptions unchanged |
+| `AccountSearchCachingTest` | Plain unit test (no Spring context/MySQL) — reflection check that `listAccountStatuses` carries `@Cacheable` and `registerNewClientAccount`/`closeAccount` carry the matching `@CacheEvict` |

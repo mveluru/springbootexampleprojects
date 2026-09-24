@@ -20,6 +20,11 @@ management:
 spring:
   profiles:
     active: dev
+  cache:
+    type: caffeine
+    cache-names: accountSearch
+    caffeine:
+      spec: expireAfterWrite=10m
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/db_example?useSSL=false

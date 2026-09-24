@@ -21,6 +21,7 @@ import org.bee.banking.request.AccountRegistrationRequest;
 import org.bee.banking.request.WithdrawalRequest;
 import org.bee.banking.rules.AccountConstraints;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,15 +56,21 @@ public class ClientAccountService {
 
     /**
      * Closes an existing checking or savings account, marking it CLOSED
-     * and stamping today as the closure date.
+     * and stamping today as the closure date. Evicts the cached account-search
+     * results (AccountStatusStatementService.listAccountStatuses), since accountStatus
+     * and closedDate - fields that view exposes - just changed.
      */
+    @CacheEvict(cacheNames = AccountStatusStatementService.ACCOUNT_SEARCH_CACHE, allEntries = true)
     public Account closeAccount(String accountNumber) {
         return accountRepository.closeAccount(accountNumber);
     }
 
     /**
-     * Flow B: Register and save brand new profiles dynamically
+     * Flow B: Register and save brand new profiles dynamically. Evicts the cached
+     * account-search results, since a newly registered account wouldn't otherwise show
+     * up in a previously-cached listing for up to the cache's 10-minute TTL.
      */
+    @CacheEvict(cacheNames = AccountStatusStatementService.ACCOUNT_SEARCH_CACHE, allEntries = true)
     public Account registerNewClientAccount(AccountRegistrationRequest request) {
         int age = Period.between(request.getDateOfBirth(), LocalDate.now()).getYears();
         int minimumAge = accountConstraints.getMinimumAge();

@@ -5,8 +5,11 @@ import org.bee.banking.component.WithdrawalMapper;
 import org.bee.banking.domain.Account;
 import org.bee.banking.domain.AccountTransaction;
 import org.bee.banking.domain.AccountType;
+import org.bee.banking.domain.BulkCloseAccountsResult;
 import org.bee.banking.domain.DepositForm;
 import org.bee.banking.domain.TransactionType;
+import org.bee.banking.exception.AccountClosedException;
+import org.bee.banking.exception.AccountNotFoundException;
 import org.bee.banking.exception.AgeException;
 import org.bee.banking.exception.MaxDepositAmountException;
 import org.bee.banking.repository.AccountRepository;
@@ -118,6 +121,35 @@ class ClientAccountServiceTest {
         Account result = clientAccountService.closeAccount("CH-123");
 
         assertThat(result).isSameAs(closedAccount);
+    }
+
+    @Test
+    void closeAccounts_allValid_returnsAllAsClosedWithNoFailures() {
+        Account first = Account.builder().checkingAccountNumber("CH-1").build();
+        Account second = Account.builder().savingAccountNumber("SV-1").build();
+        when(accountRepository.closeAccount("CH-1")).thenReturn(first);
+        when(accountRepository.closeAccount("SV-1")).thenReturn(second);
+
+        BulkCloseAccountsResult result = clientAccountService.closeAccounts(List.of("CH-1", "SV-1"));
+
+        assertThat(result.getClosedAccounts()).containsExactly(first, second);
+        assertThat(result.getFailures()).isEmpty();
+    }
+
+    @Test
+    void closeAccounts_someInvalid_closesTheValidOnesAndReportsFailuresForTheRest() {
+        Account closed = Account.builder().checkingAccountNumber("CH-1").build();
+        when(accountRepository.closeAccount("CH-1")).thenReturn(closed);
+        when(accountRepository.closeAccount("CH-missing")).thenThrow(new AccountNotFoundException("Account not found: CH-missing"));
+        when(accountRepository.closeAccount("CH-already-closed")).thenThrow(new AccountClosedException("Account CH-already-closed is already closed"));
+
+        BulkCloseAccountsResult result = clientAccountService.closeAccounts(List.of("CH-1", "CH-missing", "CH-already-closed"));
+
+        assertThat(result.getClosedAccounts()).containsExactly(closed);
+        assertThat(result.getFailures()).hasSize(2);
+        assertThat(result.getFailures())
+                .extracting("accountNumber")
+                .containsExactlyInAnyOrder("CH-missing", "CH-already-closed");
     }
 
     @Test

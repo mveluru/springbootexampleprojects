@@ -7,9 +7,13 @@ import org.bee.banking.component.WithdrawalMapper;
 import org.bee.banking.domain.Account;
 import org.bee.banking.domain.AccountTransaction;
 import org.bee.banking.domain.AccountType;
+import org.bee.banking.domain.BulkCloseAccountsResult;
+import org.bee.banking.domain.BulkCloseFailure;
 import org.bee.banking.domain.DepositForm;
 import org.bee.banking.domain.TransactionType;
 import org.bee.banking.domain.WithdrawalForm;
+import org.bee.banking.exception.AccountClosedException;
+import org.bee.banking.exception.AccountNotFoundException;
 import org.bee.banking.exception.AgeException;
 import org.bee.banking.exception.MaxDepositAmountException;
 import org.bee.banking.messages.BankingMessages;
@@ -28,6 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -63,6 +69,31 @@ public class ClientAccountService {
     @CacheEvict(cacheNames = AccountStatusStatementService.ACCOUNT_SEARCH_CACHE, allEntries = true)
     public Account closeAccount(String accountNumber) {
         return accountRepository.closeAccount(accountNumber);
+    }
+
+    /**
+     * Bulk-closes multiple accounts by number, best-effort: an invalid or already-closed
+     * account number doesn't block the others from closing. Calls
+     * {@code accountRepository.closeAccount} directly (not {@link #closeAccount}) since a
+     * self-invocation within the same bean would bypass this method's own {@code @CacheEvict}
+     * proxy - evicting once here for the whole batch has the same net effect as evicting
+     * per-account, with fewer cache rebuilds.
+     */
+    @CacheEvict(cacheNames = AccountStatusStatementService.ACCOUNT_SEARCH_CACHE, allEntries = true)
+    public BulkCloseAccountsResult closeAccounts(List<String> accountNumbers) {
+        log.info(BankingMessages.LOG_BULK_CLOSE_PROCESSING, accountNumbers.size());
+        List<Account> closedAccounts = new ArrayList<>();
+        List<BulkCloseFailure> failures = new ArrayList<>();
+        for (String accountNumber : accountNumbers) {
+            try {
+                closedAccounts.add(accountRepository.closeAccount(accountNumber));
+            } catch (AccountNotFoundException | AccountClosedException e) {
+                log.warn(BankingMessages.LOG_BULK_CLOSE_ITEM_FAILED, accountNumber, e.getMessage());
+                failures.add(BulkCloseFailure.builder().accountNumber(accountNumber).reason(e.getMessage()).build());
+            }
+        }
+        log.info(BankingMessages.LOG_BULK_CLOSE_COMPLETED, closedAccounts.size(), failures.size());
+        return BulkCloseAccountsResult.builder().closedAccounts(closedAccounts).failures(failures).build();
     }
 
     /**

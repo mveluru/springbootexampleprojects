@@ -5,9 +5,11 @@ import lombok.RequiredArgsConstructor;
 import org.bee.banking.domain.Account;
 import org.bee.banking.domain.AccountStatus;
 import org.bee.banking.domain.BankStatement;
+import org.bee.banking.domain.BulkCloseAccountsResult;
 import org.bee.banking.domain.DepositForm;
 import org.bee.banking.request.AccountLookupRequest;
 import org.bee.banking.request.AccountRegistrationRequest;
+import org.bee.banking.request.BulkCloseAccountsRequest;
 import org.bee.banking.request.WithdrawalRequest;
 import org.bee.banking.service.BankStatementService;
 import org.bee.banking.service.ClientAccountService;
@@ -115,6 +117,18 @@ public class ClientAccountController {
     public ResponseEntity<Account> closeAccount(@PathVariable String accountNumber) {
         Account closedAccount = accountService.closeAccount(accountNumber);
         return ResponseEntity.ok(closedAccount);
+    }
+
+    /**
+     * Scenario I: Bulk-close multiple accounts by number in one call. Best-effort - an
+     * invalid or already-closed account number doesn't block the others; the response
+     * carries both the accounts that were closed and any per-account failures.
+     * POST /api/accounts/close
+     */
+    @PostMapping("/close")
+    public ResponseEntity<BulkCloseAccountsResult> closeAccounts(@Valid @RequestBody BulkCloseAccountsRequest request) {
+        BulkCloseAccountsResult result = accountService.closeAccounts(request.getAccountNumbers());
+        return ResponseEntity.ok(result);
     }
 
     /**

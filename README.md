@@ -145,6 +145,7 @@ All REST endpoints are prefixed with `http://localhost:8081/brite`:
 | `POST` | `/v1/api/accounts/withdraw` | Withdraws funds from a checking/savings account; `400` on insufficient funds, mismatched account type, or a `CLOSED` account, `404` if the account doesn't exist |
 | `POST` | `/v1/api/accounts/deposit` | Deposits funds into a checking/savings account; `400` on invalid amount/deposit type, mismatched account type, a cash amount over the configured maximum, or a `CLOSED` account, `404` if the account doesn't exist |
 | `POST` | `/v1/api/accounts/{accountNumber}/close` | Closes a checking/savings account (status `ACTIVE` → `CLOSED`, stamps `closedDate`); `400` if already closed, `404` if the account doesn't exist |
+| `POST` | `/v1/api/accounts/close` | Bulk-closes multiple accounts in one call (body: `{"accountNumbers": [...]}`). Best-effort — an invalid/already-closed account number doesn't block the others; the `200` response carries `closedAccounts` (the ones that succeeded) and `failures` (`accountNumber` + `reason` for the rest). `400` if `accountNumbers` is empty/missing |
 | `GET` | `/v1/api/accounts/{accountNumber}/statement?beginDate=yyyy-MM-dd&endDate=yyyy-MM-dd` | Returns a bank statement (deposit/withdrawal history) for the account in the given range; each transaction includes `depositType` (`"cash"`/`"check"` for deposits, `null` for withdrawals); `400` if the range exceeds the configured maximum months, `404` if the account doesn't exist |
 | `GET` | `/notify?name={name}` | Fire-and-forget async email notification demo |
 | `GET` | `/report` | Async task that returns a completed report string |
@@ -302,6 +303,11 @@ curl -s -X POST http://localhost:8081/brite/v1/api/accounts/deposit \
 curl -s -X POST http://localhost:8081/brite/v1/api/accounts/CH-0000088291/close \
   -H "X-Customer-Id: demo-customer-1"
 
+# Bulk-Close Multiple Accounts (best-effort; invalid ones show up under "failures")
+curl -s -X POST http://localhost:8081/brite/v1/api/accounts/close \
+  -H "Content-Type: application/json" -H "X-Customer-Id: demo-customer-1" \
+  -d '{"accountNumbers":["CH-0000010001","SV-0000020001"]}'
+
 # Get a Bank Statement
 curl -s "http://localhost:8081/brite/v1/api/accounts/CH-0000088291/statement?beginDate=2026-01-01&endDate=2026-12-31" \
   -H "X-Customer-Id: demo-customer-1"
@@ -350,7 +356,7 @@ mvn test
 | `BriteConfigValuesControllerTest` | `/v1/configs` config endpoints — app, email, SMS |
 | `SpringBootProjectsApplicationTests` | Application context load + actuator health, liveness, and readiness probes |
 | `AccountRepositoryTest` | Plain unit test (no Spring context/MySQL) — account creation defaults, ACTIVE/CLOSED status lifecycle, withdraw/deposit balance rules, account search/pagination/sorting/date-range filters, conditional accountNumber filter |
-| `ClientAccountServiceTest` | Plain unit test (no Spring context/MySQL) — registration age gating, withdraw/deposit input validation, deposit records a transaction with the correct `depositType` |
+| `ClientAccountServiceTest` | Plain unit test (no Spring context/MySQL) — registration age gating, withdraw/deposit input validation, deposit records a transaction with the correct `depositType`, bulk close (all succeed; partial failure doesn't block the rest) |
 | `AccountStatusStatementServiceTest` | Plain unit test (no Spring context/MySQL) — account search date-range validation, Account → AccountStatusView mapping (checking vs savings account number, customer name), conditional accountNumber pass-through, default/overridden `months` lookback window |
 | `CustomerRateLimiterTest` | Plain unit test (no Spring context/MySQL) — per-customer daily counter: decrements, blocks past the limit, independent per customer |
 | `BankingRateLimitFilterTest` | Plain unit test (no Spring context/MySQL) — missing-header rejection, within-limit pass-through + headers, over-limit `429` |

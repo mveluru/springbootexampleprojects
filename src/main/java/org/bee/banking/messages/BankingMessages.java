@@ -41,6 +41,9 @@ public final class BankingMessages {
     public static final String LOG_ACCOUNT_CLOSED = "Closed account {}";
     public static final String LOG_ACCOUNT_CLOSE_REJECTED_ALREADY_CLOSED = "Close rejected: account {} is already closed";
     public static final String LOG_ACCOUNT_CLOSE_ACCOUNT_NOT_FOUND = "Close failed: account {} not found";
+    public static final String LOG_BULK_CLOSE_PROCESSING = "Bulk-closing {} accounts";
+    public static final String LOG_BULK_CLOSE_ITEM_FAILED = "Bulk close skipped account {}: {}";
+    public static final String LOG_BULK_CLOSE_COMPLETED = "Bulk close completed: {} closed, {} failed";
 
     // WithdrawalRepository log messages
     public static final String LOG_WITHDRAWAL_HISTORY_RECORDED = "Recorded withdrawal history entry for account {}: amount={}, status={}";
@@ -120,6 +123,9 @@ public final class BankingMessages {
 
     // AccountLookupRequest-specific validation messages
     public static final String VALIDATION_ACCOUNT_NUMBER_REQUIRED = "Account number is required";
+
+    // BulkCloseAccountsRequest-specific validation messages
+    public static final String VALIDATION_ACCOUNT_NUMBERS_REQUIRED = "At least one account number is required";
 
     // AccountRegistrationRequest-specific validation messages
     public static final String VALIDATION_FIRST_NAME_REQUIRED = "First name is required";

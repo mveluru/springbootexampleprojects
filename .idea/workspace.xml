@@ -4,14 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="500bfae8-b424-4f4d-b8ec-4b2725646d06" name="Changes" comment="Claude.md and configuration , setting.local.json etc">
-      <change beforePath="$PROJECT_DIR$/.claude/CLAUDE.md" beforeDir="false" afterPath="$PROJECT_DIR$/.claude/CLAUDE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/contoller/ClientAccountController.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/contoller/ClientAccountController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/gateway/BankingGatewayConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/gateway/BankingGatewayConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yml" afterDir="false" />
-    </list>
+    <list default="true" id="500bfae8-b424-4f4d-b8ec-4b2725646d06" name="Changes" comment="Claude.md and configuration , setting.local.json etc" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -191,7 +184,7 @@
       <workItem from="1789490859106" duration="2743000" />
       <workItem from="1789612767360" duration="55487000" />
       <workItem from="1789851823700" duration="19964000" />
-      <workItem from="1790087877417" duration="18971000" />
+      <workItem from="1790087877417" duration="19669000" />
     </task>
     <task id="LOCAL-00010" summary="Find All Method Refactored.">
       <option name="closed" value="true" />

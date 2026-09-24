@@ -3,8 +3,10 @@ package org.bee.banking.service;
 import org.bee.banking.component.AccountMapper;
 import org.bee.banking.component.WithdrawalMapper;
 import org.bee.banking.domain.Account;
+import org.bee.banking.domain.AccountTransaction;
 import org.bee.banking.domain.AccountType;
 import org.bee.banking.domain.DepositForm;
+import org.bee.banking.domain.TransactionType;
 import org.bee.banking.exception.AgeException;
 import org.bee.banking.exception.MaxDepositAmountException;
 import org.bee.banking.repository.AccountRepository;
@@ -21,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -46,6 +49,7 @@ class ClientAccountServiceTest {
 
     private ClientAccountService clientAccountService;
     private AccountConstraints accountConstraints;
+    private TransactionRepository transactionRepository;
 
     @BeforeEach
     void setUp() {
@@ -55,13 +59,14 @@ class ClientAccountServiceTest {
                 .checkingMinimumBalance(BigDecimal.ZERO)
                 .savingMinimumBalance(BigDecimal.ZERO)
                 .build();
+        transactionRepository = new TransactionRepository();
 
         clientAccountService = new ClientAccountService(
                 accountRepository,
                 AccountMapper.INSTANCE,
                 WithdrawalMapper.INSTANCE,
                 new WithdrawalRepository(),
-                new TransactionRepository(),
+                transactionRepository,
                 accountConstraints,
                 notificationService);
     }
@@ -177,5 +182,23 @@ class ClientAccountServiceTest {
                 .isInstanceOf(MaxDepositAmountException.class);
 
         verify(accountRepository, never()).deposit(any(), any(), any());
+    }
+
+    @Test
+    void deposit_validCashDeposit_recordsTransactionWithDepositType() {
+        DepositForm form = new DepositForm("CH-100", new BigDecimal("50.00"), AccountType.CHECKING, "cash",
+                null, null, null, null, null, null, null, null);
+        Account updatedAccount = Account.builder().checkingAccountNumber("CH-100").checkingBalance(new BigDecimal("150.00")).build();
+        when(accountRepository.deposit("CH-100", AccountType.CHECKING, new BigDecimal("50.00"))).thenReturn(updatedAccount);
+
+        clientAccountService.depositAndSaveToAccount(form);
+
+        List<AccountTransaction> recorded = transactionRepository.findByAccountNumber("CH-100");
+        assertThat(recorded).hasSize(1);
+        AccountTransaction transaction = recorded.get(0);
+        assertThat(transaction.getTransactionType()).isEqualTo(TransactionType.DEPOSIT);
+        assertThat(transaction.getDepositType()).isEqualTo("cash");
+        assertThat(transaction.getAmount()).isEqualByComparingTo(new BigDecimal("50.00"));
+        assertThat(transaction.getBalanceAfter()).isEqualByComparingTo(new BigDecimal("150.00"));
     }
 }

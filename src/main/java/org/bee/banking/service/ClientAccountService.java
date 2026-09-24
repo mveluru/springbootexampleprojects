@@ -214,6 +214,7 @@ public class ClientAccountService {
                 .amount(amount)
                 .balanceAfter(balanceAfter)
                 .transactionDate(LocalDate.now())
+                .depositType(depositType)
                 .build());
 
         return updatedAccount;

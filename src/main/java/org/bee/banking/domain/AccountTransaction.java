@@ -18,4 +18,6 @@ public class AccountTransaction {
     private BigDecimal amount;
     private BigDecimal balanceAfter;
     private LocalDate transactionDate;
+    /** "cash" or "check"; only set for DEPOSIT transactions, null for WITHDRAWAL. */
+    private String depositType;
 }

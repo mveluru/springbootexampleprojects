@@ -6,12 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="500bfae8-b424-4f4d-b8ec-4b2725646d06" name="Changes" comment="Claude.md and configuration , setting.local.json etc">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/service/AccountStatusStatementService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/service/AccountStatusStatementService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/service/ClientAccountService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/service/ClientAccountService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/configs/SpringBootProjectsApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/configs/SpringBootProjectsApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.yml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -192,7 +186,7 @@
       <workItem from="1789490859106" duration="2743000" />
       <workItem from="1789612767360" duration="55487000" />
       <workItem from="1789851823700" duration="19964000" />
-      <workItem from="1790087877417" duration="15164000" />
+      <workItem from="1790087877417" duration="16454000" />
     </task>
     <task id="LOCAL-00010" summary="Find All Method Refactored.">
       <option name="closed" value="true" />

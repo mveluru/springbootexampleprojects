@@ -47,7 +47,7 @@ public class ClientAccountController {
      * date-range/status filters); if it's omitted/null, every matching account is
      * returned, paginated.
      * GET /api/accounts?months=6
-     * GET /api/accounts?accountNumber=CH-88291&status=CLOSED&createdFrom=2021-01-01&createdTo=2021-12-31&page=0&size=20&sort=createdDate,desc
+     * GET /api/accounts?accountNumber=CH-0000088291&status=CLOSED&createdFrom=2021-01-01&createdTo=2021-12-31&page=0&size=20&sort=createdDate,desc
      */
     @GetMapping
     public ResponseEntity<Page<AccountStatusView>> listAccounts(

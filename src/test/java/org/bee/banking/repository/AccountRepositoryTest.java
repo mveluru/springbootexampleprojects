@@ -40,7 +40,7 @@ class AccountRepositoryTest {
                 .minimumAge(18)
                 .maxStatementRangeMonths(12)
                 .build();
-        // Constructor seeds demo data (CH-88291, SV-44102, ...); irrelevant to these tests
+        // Constructor seeds demo data (CH-0000088291, SV-0000044102, ...); irrelevant to these tests
         // since each test uses its own freshly-created account number.
         accountRepository = new AccountRepository(constraints);
     }
@@ -191,7 +191,7 @@ class AccountRepositoryTest {
 
     @Test
     void findByAccountNumber_seededMockAccount_isFound() {
-        assertThat(accountRepository.findByAccountNumber("CH-88291")).isPresent();
+        assertThat(accountRepository.findByAccountNumber("CH-0000088291")).isPresent();
     }
 
     @Test

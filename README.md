@@ -9,7 +9,7 @@ A Spring Boot 3 REST application demonstrating configuration properties binding 
 - **Configuration Management**: Strongly-typed properties bound via `@ConfigurationProperties` for notification options (App, Email, SMS, Retry).
 - **Configs API**: Exposes endpoints under `/v1/configs` to query live application, email, and SMS configurations.
 - **Product Catalog API**: Exposes endpoints under `/v1/product` to list, look up, and add products (in-memory catalog).
-- **Banking APIs**: Client/account lookup, registration, withdrawal, and deposit (`/v1/client`, `/v1/api/accounts`) — withdrawals and deposits are applied atomically per account and withdrawals are recorded to an in-memory history — plus async notification demos (`/notify`, `/report`) backed by `@Async`.
+- **Banking APIs**: Client/account lookup, registration, withdrawal, and deposit (`/v1/client`, `/v1/api/accounts`) — withdrawals and deposits are applied atomically per account and withdrawals are recorded to an in-memory history — plus async notification demos (`/notify`, `/report`) backed by `@Async`. Account numbers are always `CH-`/`SV-` (checking/savings) followed by a zero-padded 10-digit number (e.g. `CH-0000088291`), whether seeded or generated on registration. 52 demo accounts (26 checking, 26 savings) are seeded on startup.
 - **Banking API Gateway & Rate Limiter**: Every banking endpoint (`/v1/api/accounts/**`, `/v1/client/**`, `/v1/payment/**`, `/notify`, `/notify-sms`, `/report`) sits behind a `Filter`-based gateway ingress layer that requires an `X-Customer-Id` header and caps each customer to a configurable number of requests per day (`banking.rate-limit`, default 1000/day) — see [Banking API gateway](#-banking-api-gateway--rate-limiter) below. Retail/events/configs endpoints are unaffected.
 - **Account Constraints**: Configurable business rules (`banking.constraints`) enforced on registration/withdrawal/deposit — minimum age to open an account, minimum balance retained after a withdrawal (checking/savings), and a maximum single cash-deposit amount.
 - **Bank Statement**: `/v1/api/accounts/{accountNumber}/statement` returns an account's deposit/withdrawal history for a given date range, capped by a configurable maximum range in months.
@@ -236,13 +236,14 @@ curl -s -X POST http://localhost:8081/brite/v1/product/addproduct \
   -H "Content-Type: application/json" \
   -d '{"productId":"200","productName":"Test Widget","quantity":"5","price":42.5}'
 
-# List/Search Accounts (paginated; all filters optional)
+# List/Search Accounts (paginated; all filters optional). The two seeded CLOSED
+# accounts are ~24-30 months old, so months must be widened to see them.
 curl -s -H "X-Customer-Id: demo-customer-1" \
-  "http://localhost:8081/brite/v1/api/accounts?status=CLOSED&createdFrom=2021-01-01&createdTo=2023-12-31&page=0&size=10&sort=createdDate,desc"
+  "http://localhost:8081/brite/v1/api/accounts?status=CLOSED&months=36&page=0&size=10&sort=createdDate,desc"
 
-# Same endpoint, narrowed to one account (still checked against the date range)
+# Same endpoint, narrowed to one account (still checked against the resolved date range)
 curl -s -H "X-Customer-Id: demo-customer-1" \
-  "http://localhost:8081/brite/v1/api/accounts?accountNumber=CH-88291&createdFrom=2020-01-01&createdTo=2020-12-31"
+  "http://localhost:8081/brite/v1/api/accounts?accountNumber=CH-0000088291&months=6"
 
 # No explicit dates: defaults to accounts created in the last 18 months (as of today)
 curl -s -H "X-Customer-Id: demo-customer-1" "http://localhost:8081/brite/v1/api/accounts"
@@ -253,7 +254,7 @@ curl -s -H "X-Customer-Id: demo-customer-1" "http://localhost:8081/brite/v1/api/
 # Look Up a Client Account (banking endpoints require X-Customer-Id, rate-limited to 1000/day)
 curl -s -X POST http://localhost:8081/brite/v1/api/accounts/lookup \
   -H "Content-Type: application/json" -H "X-Customer-Id: demo-customer-1" \
-  -d '{"accountNumber":"CH-88291"}'
+  -d '{"accountNumber":"CH-0000088291"}'
 
 # Register a New Client Account
 curl -s -X POST http://localhost:8081/brite/v1/api/accounts/register \
@@ -268,7 +269,7 @@ curl -s -X POST http://localhost:8081/brite/v1/api/accounts/register \
 curl -s -X POST http://localhost:8081/brite/v1/api/accounts/withdraw \
   -H "Content-Type: application/json" -H "X-Customer-Id: demo-customer-1" \
   -d '{
-        "accountNumber":"CH-88291","accountType":"CHECKING","withdrawAmount":100.00,
+        "accountNumber":"CH-0000088291","accountType":"CHECKING","withdrawAmount":100.00,
         "firstName":"Alice","lastName":"Smith","street":"123 Main St","city":"Austin",
         "state":"TX","zip":"78701","addressLine1":"Apt 4B"
       }'
@@ -277,17 +278,17 @@ curl -s -X POST http://localhost:8081/brite/v1/api/accounts/withdraw \
 curl -s -X POST http://localhost:8081/brite/v1/api/accounts/deposit \
   -H "Content-Type: application/json" -H "X-Customer-Id: demo-customer-1" \
   -d '{
-        "accountNumber":"CH-88291","amount":250.00,"accountType":"CHECKING","depositType":"cash",
+        "accountNumber":"CH-0000088291","amount":250.00,"accountType":"CHECKING","depositType":"cash",
         "firstName":"Alice","lastName":"Smith","street":"123 Main St","city":"Austin",
         "state":"TX","zip":"78701","addressLine1":"Apt 4B"
       }'
 
 # Close a Client Account
-curl -s -X POST http://localhost:8081/brite/v1/api/accounts/CH-88291/close \
+curl -s -X POST http://localhost:8081/brite/v1/api/accounts/CH-0000088291/close \
   -H "X-Customer-Id: demo-customer-1"
 
 # Get a Bank Statement
-curl -s "http://localhost:8081/brite/v1/api/accounts/CH-88291/statement?beginDate=2026-01-01&endDate=2026-12-31" \
+curl -s "http://localhost:8081/brite/v1/api/accounts/CH-0000088291/statement?beginDate=2026-01-01&endDate=2026-12-31" \
   -H "X-Customer-Id: demo-customer-1"
 
 # Trigger a Fire-and-Forget Async Notification

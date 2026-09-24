@@ -38,10 +38,15 @@ public class ClientAccountController {
     private final AccountStatusStatementService accountStatusStatementService;
 
     /**
-     * Scenario G: Retrieve account names/details within a createdDate/closedDate
-     * range. Conditional lookup: if {@code accountNumber} is provided, only that
-     * account is returned (still subject to the date-range/status filters); if it's
-     * omitted/null, every account within the range is returned, paginated.
+     * Scenario G: Retrieve account ids/details within a createdDate/closedDate range.
+     * If neither {@code createdFrom} nor {@code createdTo} is given, defaults to
+     * "as of today minus {@code months} months" (18 months if {@code months} is also
+     * omitted); supplying either explicit created-date bound disables that default and
+     * {@code months} is ignored. Conditional lookup: if {@code accountNumber} is
+     * provided, only that account is returned (still subject to the resolved
+     * date-range/status filters); if it's omitted/null, every matching account is
+     * returned, paginated.
+     * GET /api/accounts?months=6
      * GET /api/accounts?accountNumber=CH-88291&status=CLOSED&createdFrom=2021-01-01&createdTo=2021-12-31&page=0&size=20&sort=createdDate,desc
      */
     @GetMapping
@@ -52,9 +57,10 @@ public class ClientAccountController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdTo,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closedFrom,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate closedTo,
+            @RequestParam(required = false) Integer months,
             @PageableDefault(size = 20, sort = "createdDate") Pageable pageable) {
         Page<AccountStatusView> accounts = accountStatusStatementService.listAccountStatuses(
-                accountNumber, status, createdFrom, createdTo, closedFrom, closedTo, pageable);
+                accountNumber, status, createdFrom, createdTo, closedFrom, closedTo, months, pageable);
         return ResponseEntity.ok(accounts);
     }
 

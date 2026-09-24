@@ -19,6 +19,7 @@ public final class BankingMessages {
     public static final String UNSUPPORTED_SORT_PROPERTY = "Unsupported sort property: %s (supported: createdDate, closedDate, accountStatus, checkingAccountNumber, savingAccountNumber)";
     public static final String CREATED_DATE_RANGE_INVALID = "createdFrom (%s) must not be after createdTo (%s)";
     public static final String CLOSED_DATE_RANGE_INVALID = "closedFrom (%s) must not be after closedTo (%s)";
+    public static final String MONTHS_MUST_BE_POSITIVE = "months must be positive, got %d";
     public static final String MINIMUM_AGE_VIOLATION = "Customer must be at least %d years old to open an account";
     public static final String MAX_CASH_DEPOSIT_EXCEEDED = "Cash deposits cannot exceed %s";
     public static final String MIN_BALANCE_VIOLATION = "Withdrawal declined: account %s must retain a minimum balance of %s";
@@ -65,6 +66,8 @@ public final class BankingMessages {
     public static final String LOG_DEPOSIT_REJECTED_MAX_CASH = "Deposit rejected for account {}: cash amount {} exceeds maximum {}";
     public static final String LOG_REGISTRATION_REJECTED_AGE = "Registration rejected: age {} is below minimum {}";
     public static final String LOG_ACCOUNT_SEARCH_REJECTED_DATE_RANGE = "Account search rejected: invalid date range - {}";
+    public static final String LOG_ACCOUNT_SEARCH_REJECTED_MONTHS = "Account search rejected: invalid months value {}";
+    public static final String LOG_ACCOUNT_SEARCH_DEFAULT_LOOKBACK_APPLIED = "No createdFrom/createdTo given; defaulting to a {}-month lookback window ({} to {})";
     public static final String LOG_ACCOUNT_SEARCH = "Searching accounts: accountNumber={}, status={}, createdFrom={}, createdTo={}, closedFrom={}, closedTo={}, page={}";
 
     // BankStatementService log messages

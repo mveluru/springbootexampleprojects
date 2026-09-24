@@ -23,20 +23,42 @@ import java.time.LocalDate;
 @Slf4j
 @RequiredArgsConstructor
 public class AccountStatusStatementService {
+    /** Default lookback window applied when neither createdFrom nor createdTo is given. */
+    public static final int DEFAULT_LOOKBACK_MONTHS = 18;
+
     private final AccountRepository accountRepository;
 
     /**
-     * Retrieves account names/details within the given createdDate/closedDate range.
-     * Conditional lookup: when {@code accountNumber} is provided, the result is
-     * narrowed to just that account (still subject to the date-range/status filters,
-     * so an out-of-range account yields an empty page rather than bypassing the
-     * range); when it's omitted/null, every account within the range is returned.
+     * Retrieves account ids/details within a createdDate/closedDate range. If neither
+     * {@code createdFrom} nor {@code createdTo} is given, defaults to a trailing window
+     * of {@code months} months ending today (falling back to {@link #DEFAULT_LOOKBACK_MONTHS}
+     * if {@code months} is also omitted) - i.e. "as of today minus N months". Supplying
+     * either explicit created-date bound disables this default entirely; {@code months}
+     * is then ignored. Conditional lookup: when {@code accountNumber} is provided, the
+     * result is narrowed to just that account (still subject to the resolved date-range/
+     * status filters, so an out-of-range account yields an empty page rather than
+     * bypassing the range); when it's omitted/null, every matching account is returned.
      */
     public Page<AccountStatusView> listAccountStatuses(String accountNumber, AccountStatus status,
                                                        LocalDate createdFrom, LocalDate createdTo,
-                                                       LocalDate closedFrom, LocalDate closedTo, Pageable pageable) {
-        if (createdFrom != null && createdTo != null && createdFrom.isAfter(createdTo)) {
-            String message = String.format(BankingMessages.CREATED_DATE_RANGE_INVALID, createdFrom, createdTo);
+                                                       LocalDate closedFrom, LocalDate closedTo,
+                                                       Integer months, Pageable pageable) {
+        if (months != null && months <= 0) {
+            log.warn(BankingMessages.LOG_ACCOUNT_SEARCH_REJECTED_MONTHS, months);
+            throw new IllegalArgumentException(String.format(BankingMessages.MONTHS_MUST_BE_POSITIVE, months));
+        }
+
+        LocalDate effectiveCreatedFrom = createdFrom;
+        LocalDate effectiveCreatedTo = createdTo;
+        if (effectiveCreatedFrom == null && effectiveCreatedTo == null) {
+            int lookbackMonths = months != null ? months : DEFAULT_LOOKBACK_MONTHS;
+            effectiveCreatedTo = LocalDate.now();
+            effectiveCreatedFrom = effectiveCreatedTo.minusMonths(lookbackMonths);
+            log.debug(BankingMessages.LOG_ACCOUNT_SEARCH_DEFAULT_LOOKBACK_APPLIED, lookbackMonths, effectiveCreatedFrom, effectiveCreatedTo);
+        }
+
+        if (effectiveCreatedFrom != null && effectiveCreatedTo != null && effectiveCreatedFrom.isAfter(effectiveCreatedTo)) {
+            String message = String.format(BankingMessages.CREATED_DATE_RANGE_INVALID, effectiveCreatedFrom, effectiveCreatedTo);
             log.warn(BankingMessages.LOG_ACCOUNT_SEARCH_REJECTED_DATE_RANGE, message);
             throw new IllegalArgumentException(message);
         }
@@ -46,8 +68,8 @@ public class AccountStatusStatementService {
             throw new IllegalArgumentException(message);
         }
 
-        log.debug(BankingMessages.LOG_ACCOUNT_SEARCH, accountNumber, status, createdFrom, createdTo, closedFrom, closedTo, pageable.getPageNumber());
-        Page<Account> accounts = accountRepository.search(accountNumber, status, createdFrom, createdTo, closedFrom, closedTo, pageable);
+        log.debug(BankingMessages.LOG_ACCOUNT_SEARCH, accountNumber, status, effectiveCreatedFrom, effectiveCreatedTo, closedFrom, closedTo, pageable.getPageNumber());
+        Page<Account> accounts = accountRepository.search(accountNumber, status, effectiveCreatedFrom, effectiveCreatedTo, closedFrom, closedTo, pageable);
         return accounts.map(this::toView);
     }
 

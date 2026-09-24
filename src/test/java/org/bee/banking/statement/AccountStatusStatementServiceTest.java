@@ -18,6 +18,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -45,7 +46,7 @@ class AccountStatusStatementServiceTest {
         LocalDate from = LocalDate.of(2024, 6, 1);
         LocalDate to = LocalDate.of(2024, 1, 1);
 
-        assertThatThrownBy(() -> service.listAccountStatuses(null, null, from, to, null, null, PageRequest.of(0, 10)))
+        assertThatThrownBy(() -> service.listAccountStatuses(null, null, from, to, null, null, null, PageRequest.of(0, 10)))
                 .isInstanceOf(IllegalArgumentException.class);
 
         verifyNoInteractions(accountRepository);
@@ -56,10 +57,58 @@ class AccountStatusStatementServiceTest {
         LocalDate from = LocalDate.of(2024, 6, 1);
         LocalDate to = LocalDate.of(2024, 1, 1);
 
-        assertThatThrownBy(() -> service.listAccountStatuses(null, AccountStatus.CLOSED, null, null, from, to, PageRequest.of(0, 10)))
+        assertThatThrownBy(() -> service.listAccountStatuses(null, AccountStatus.CLOSED, null, null, from, to, null, PageRequest.of(0, 10)))
                 .isInstanceOf(IllegalArgumentException.class);
 
         verifyNoInteractions(accountRepository);
+    }
+
+    @Test
+    void listAccountStatuses_nonPositiveMonths_throwsIllegalArgumentExceptionWithoutTouchingRepository() {
+        assertThatThrownBy(() -> service.listAccountStatuses(null, null, null, null, null, null, 0, PageRequest.of(0, 10)))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        verifyNoInteractions(accountRepository);
+    }
+
+    @Test
+    void listAccountStatuses_noExplicitDates_defaultsToEighteenMonthLookback() {
+        Pageable pageable = PageRequest.of(0, 10);
+        LocalDate expectedTo = LocalDate.now();
+        LocalDate expectedFrom = expectedTo.minusMonths(AccountStatusStatementService.DEFAULT_LOOKBACK_MONTHS);
+        when(accountRepository.search(null, null, expectedFrom, expectedTo, null, null, pageable))
+                .thenReturn(new PageImpl<>(List.of(), pageable, 0));
+
+        service.listAccountStatuses(null, null, null, null, null, null, null, pageable);
+
+        verify(accountRepository).search(null, null, expectedFrom, expectedTo, null, null, pageable);
+    }
+
+    @Test
+    void listAccountStatuses_monthsProvidedWithoutExplicitDates_overridesDefaultLookback() {
+        Pageable pageable = PageRequest.of(0, 10);
+        LocalDate expectedTo = LocalDate.now();
+        LocalDate expectedFrom = expectedTo.minusMonths(6);
+        when(accountRepository.search(null, null, expectedFrom, expectedTo, null, null, pageable))
+                .thenReturn(new PageImpl<>(List.of(), pageable, 0));
+
+        service.listAccountStatuses(null, null, null, null, null, null, 6, pageable);
+
+        verify(accountRepository).search(null, null, expectedFrom, expectedTo, null, null, pageable);
+    }
+
+    @Test
+    void listAccountStatuses_explicitCreatedDates_ignoreMonthsAndSkipDefaultLookback() {
+        Pageable pageable = PageRequest.of(0, 10);
+        LocalDate createdFrom = LocalDate.of(2021, 1, 1);
+        LocalDate createdTo = LocalDate.of(2021, 12, 31);
+        when(accountRepository.search(null, null, createdFrom, createdTo, null, null, pageable))
+                .thenReturn(new PageImpl<>(List.of(), pageable, 0));
+
+        // months is provided but must be ignored since explicit createdFrom/createdTo win
+        service.listAccountStatuses(null, null, createdFrom, createdTo, null, null, 6, pageable);
+
+        verify(accountRepository).search(null, null, createdFrom, createdTo, null, null, pageable);
     }
 
     @Test
@@ -74,10 +123,12 @@ class AccountStatusStatementServiceTest {
                 .customer(customer)
                 .build();
         Pageable pageable = PageRequest.of(0, 10);
-        when(accountRepository.search(null, null, null, null, null, null, pageable))
+        LocalDate createdFrom = LocalDate.of(2000, 1, 1);
+        LocalDate createdTo = LocalDate.of(2100, 1, 1);
+        when(accountRepository.search(null, null, createdFrom, createdTo, null, null, pageable))
                 .thenReturn(new PageImpl<>(List.of(account), pageable, 1));
 
-        Page<AccountStatusView> result = service.listAccountStatuses(null, null, null, null, null, null, pageable);
+        Page<AccountStatusView> result = service.listAccountStatuses(null, null, createdFrom, createdTo, null, null, null, pageable);
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         AccountStatusView view = result.getContent().get(0);
@@ -101,10 +152,12 @@ class AccountStatusStatementServiceTest {
                 .customer(Customer.builder().firstName("Bob").lastName("Jones").dateOfBirth(LocalDate.of(1980, 1, 1)).build())
                 .build();
         Pageable pageable = PageRequest.of(0, 10);
-        when(accountRepository.search(null, AccountStatus.CLOSED, null, null, null, null, pageable))
+        LocalDate createdFrom = LocalDate.of(2000, 1, 1);
+        LocalDate createdTo = LocalDate.of(2100, 1, 1);
+        when(accountRepository.search(null, AccountStatus.CLOSED, createdFrom, createdTo, null, null, pageable))
                 .thenReturn(new PageImpl<>(List.of(account), pageable, 1));
 
-        Page<AccountStatusView> result = service.listAccountStatuses(null, AccountStatus.CLOSED, null, null, null, null, pageable);
+        Page<AccountStatusView> result = service.listAccountStatuses(null, AccountStatus.CLOSED, createdFrom, createdTo, null, null, null, pageable);
 
         AccountStatusView view = result.getContent().get(0);
         assertThat(view.getAccountNumber()).isEqualTo("SV-1");
@@ -121,10 +174,12 @@ class AccountStatusStatementServiceTest {
                 .customer(Customer.builder().firstName("Carol").lastName("Davis").dateOfBirth(LocalDate.of(1978, 3, 15)).build())
                 .build();
         Pageable pageable = PageRequest.of(0, 10);
-        when(accountRepository.search("CH-1", null, null, null, null, null, pageable))
+        LocalDate createdFrom = LocalDate.of(2000, 1, 1);
+        LocalDate createdTo = LocalDate.of(2100, 1, 1);
+        when(accountRepository.search("CH-1", null, createdFrom, createdTo, null, null, pageable))
                 .thenReturn(new PageImpl<>(List.of(account), pageable, 1));
 
-        Page<AccountStatusView> result = service.listAccountStatuses("CH-1", null, null, null, null, null, pageable);
+        Page<AccountStatusView> result = service.listAccountStatuses("CH-1", null, createdFrom, createdTo, null, null, null, pageable);
 
         assertThat(result.getTotalElements()).isEqualTo(1);
         assertThat(result.getContent().get(0).getAccountNumber()).isEqualTo("CH-1");

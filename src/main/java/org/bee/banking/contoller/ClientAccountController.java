@@ -79,9 +79,9 @@ public class ClientAccountController {
 
     /**
      * Scenario B: Create a brand new account and customer record structure
-     * POST /api/accounts/register
+     * POST /api/accounts/newaccount
      */
-    @PostMapping("/register")
+    @PostMapping("/newaccount")
     public ResponseEntity<Account> registerAccount(@Valid @RequestBody AccountRegistrationRequest request) {
         Account createdAccount = accountService.registerNewClientAccount(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdAccount);

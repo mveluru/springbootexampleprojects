@@ -11,6 +11,7 @@ A Spring Boot 3 REST application demonstrating configuration properties binding 
 - **Product Catalog API**: Exposes endpoints under `/v1/product` to list, look up, and add products (in-memory catalog).
 - **Banking APIs**: Client/account lookup, registration, withdrawal, and deposit (`/v1/client`, `/v1/api/accounts`) — withdrawals and deposits are applied atomically per account and withdrawals are recorded to an in-memory history — plus async notification demos (`/notify`, `/report`) backed by `@Async`. Account numbers are always `CH-`/`SV-` (checking/savings) followed by a zero-padded 10-digit number (e.g. `CH-0000088291`), whether seeded or generated on registration. 52 demo accounts (26 checking, 26 savings) are seeded on startup.
 - **Banking API Gateway & Rate Limiter**: Every banking endpoint (`/v1/api/accounts/**`, `/v1/client/**`, `/v1/payment/**`, `/notify`, `/notify-sms`, `/report`) sits behind a `Filter`-based gateway ingress layer that requires an `X-Customer-Id` header and caps each customer to a configurable number of requests per day (`banking.rate-limit`, default 1000/day) — see [Banking API gateway](#-banking-api-gateway--rate-limiter) below. Retail/events/configs endpoints are unaffected.
+- **Business Transaction ID (btid) Tracing**: The same gateway stamps every banking request with a unique `btid` (`X-BTID` response header) before it reaches any controller. The id is stored in SLF4J's MDC, so every log line from every layer of that request — controller, service, repository — carries it, letting you grep one request's full log trail with a single id.
 - **Account Constraints**: Configurable business rules (`banking.constraints`) enforced on registration/withdrawal/deposit — minimum age to open an account, minimum balance retained after a withdrawal (checking/savings), and a maximum single cash-deposit amount.
 - **Bank Statement**: `/v1/api/accounts/{accountNumber}/statement` returns an account's deposit/withdrawal history for a given date range, capped by a configurable maximum range in months.
 - **Resilience Demo**: `/v1/payment/process` demonstrates a Resilience4j circuit breaker with jittered exponential-backoff retry around a simulated flaky downstream call.
@@ -44,6 +45,10 @@ server:
   port: 8081
   servlet:
     context-path: /brite
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %5p ${PID:- } --- [%15.15t] [btid=%X{btid:--}] %-40.40logger{39} : %m%n%wEx"
 
 management:
   endpoints:
@@ -136,7 +141,7 @@ All REST endpoints are prefixed with `http://localhost:8081/brite`:
 | `GET` | `/v1/client/name` | Returns a sample customer record |
 | `GET` | `/v1/api/accounts?accountNumber=&status=&createdFrom=&createdTo=&closedFrom=&closedTo=&months=&page=&size=&sort=` | Retrieves account ids/details within a createdDate/closedDate range, paginated. All filters optional. **Default lookback**: if neither `createdFrom` nor `createdTo` is given, defaults to "as of today minus `months` months" (18 months if `months` is also omitted); supplying either explicit created-date bound disables this default and `months` is ignored (`400` if `months` isn't positive). **Conditional lookup**: if `accountNumber` is given, only that account is returned (still subject to the other filters — an out-of-range match yields an empty page, not a bypass); if omitted/null, every matching account is returned. Other filters: `status` (`ACTIVE`/`CLOSED`), `closedFrom`/`closedTo` (inclusive `yyyy-MM-dd` range), standard Spring Data `page`/`size`/`sort` (sortable by `createdDate`, `closedDate`, `accountStatus`, `checkingAccountNumber`, `savingAccountNumber`; default `size=20`, sorted by `createdDate` ascending). Returns a Spring Data `Page<AccountStatusView>` envelope (`content`, `totalElements`, `totalPages`, etc) — each row is flattened to `accountNumber`, `accountType`, `accountStatus`, `createdDate`, `closedDate`, `firstName`, `lastName`, not the full nested `Account`/`Customer`. `400` if a `*From` date is after its `*To` date or an unsupported `sort` property is given |
 | `POST` | `/v1/api/accounts/lookup` | Looks up an account by account number; `404` if not found |
-| `POST` | `/v1/api/accounts/register` | Registers a new customer + account |
+| `POST` | `/v1/api/accounts/newaccount` | Registers a new customer + account |
 | `POST` | `/v1/api/accounts/withdraw` | Withdraws funds from a checking/savings account; `400` on insufficient funds, mismatched account type, or a `CLOSED` account, `404` if the account doesn't exist |
 | `POST` | `/v1/api/accounts/deposit` | Deposits funds into a checking/savings account; `400` on invalid amount/deposit type, mismatched account type, a cash amount over the configured maximum, or a `CLOSED` account, `404` if the account doesn't exist |
 | `POST` | `/v1/api/accounts/{accountNumber}/close` | Closes a checking/savings account (status `ACTIVE` → `CLOSED`, stamps `closedDate`); `400` if already closed, `404` if the account doesn't exist |
@@ -152,6 +157,8 @@ All REST endpoints are prefixed with `http://localhost:8081/brite`:
 2. **Per-customer daily rate limit** — each customer ID is capped at `banking.rate-limit.requests-per-day` (default **1000**) requests per calendar day, tracked in-memory and reset at midnight. Exceeding it → `429 Too Many Requests`.
 
 Every response that reaches the filter (allowed or rejected) carries `X-RateLimit-Limit` and `X-RateLimit-Remaining` headers. Set `banking.rate-limit.enabled: false` to bypass the whole gateway (e.g. for local scripting). This is a single-instance, in-memory limiter (like the rest of the app's mock stores) — not a distributed rate limiter — and the customer ID is a caller-supplied header rather than an authenticated principal, since the app has no auth layer.
+
+A second filter, `BusinessTransactionIdFilter`, is registered on the same URL patterns but runs *first* (ahead of the rate limiter), so it stamps a unique business transaction id (`btid`, a UUID) onto every banking request before anything else touches it — including requests the rate limiter goes on to reject. The `btid` is put into SLF4J's MDC and echoed back as the `X-BTID` response header; every log line for that request, in every layer (controller, service, repository), automatically includes `[btid=...]` via the `logging.pattern.console` entry in `application.yml` — no parameter threading required. It's cleared from MDC in a `finally` block after each request so it never leaks onto Tomcat's reused worker threads. Logs outside any request (startup, scheduled tasks) show `[btid=-]`.
 
 ### Resilience demo — `/v1/payment`
 
@@ -263,8 +270,9 @@ curl -s -X POST http://localhost:8081/brite/v1/api/accounts/lookup \
   -H "Content-Type: application/json" -H "X-Customer-Id: demo-customer-1" \
   -d '{"accountNumber":"CH-0000088291"}'
 
-# Register a New Client Account
-curl -s -X POST http://localhost:8081/brite/v1/api/accounts/register \
+# Register a New Client Account (response includes an X-BTID header - grep the console
+# log for that value to see this request's full trail across controller/service/repository)
+curl -s -i -X POST http://localhost:8081/brite/v1/api/accounts/newaccount \
   -H "Content-Type: application/json" -H "X-Customer-Id: demo-customer-1" \
   -d '{
         "firstName":"David","lastName":"Miller","dateOfBirth":"08/19/1994",
@@ -346,5 +354,6 @@ mvn test
 | `AccountStatusStatementServiceTest` | Plain unit test (no Spring context/MySQL) — account search date-range validation, Account → AccountStatusView mapping (checking vs savings account number, customer name), conditional accountNumber pass-through, default/overridden `months` lookback window |
 | `CustomerRateLimiterTest` | Plain unit test (no Spring context/MySQL) — per-customer daily counter: decrements, blocks past the limit, independent per customer |
 | `BankingRateLimitFilterTest` | Plain unit test (no Spring context/MySQL) — missing-header rejection, within-limit pass-through + headers, over-limit `429` |
+| `BusinessTransactionIdFilterTest` | Plain unit test (no Spring context/MySQL) — btid is in MDC while the chain runs, echoed as `X-BTID`, cleared after (even on exception), and unique per request |
 | `ExecutionTimeLoggingAspectTest` | Plain unit test (no Spring context/MySQL) — the `@Around` advice returns the join point's result and propagates exceptions unchanged |
 | `AccountSearchCachingTest` | Plain unit test (no Spring context/MySQL) — reflection check that `listAccountStatuses` carries `@Cacheable` and `registerNewClientAccount`/`closeAccount` carry the matching `@CacheEvict` |

@@ -9,12 +9,18 @@ import org.bee.banking.exception.AccountClosedException;
 import org.bee.banking.exception.AccountNotFoundException;
 import org.bee.banking.exception.InsufficientFundsException;
 import org.bee.banking.exception.MinBalanceException;
+import org.bee.banking.repository.jpa.AccountJpaRepository;
 import org.bee.banking.rules.AccountConstraints;
+import org.bee.configs.SpringBootProjectsApplication;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -23,11 +29,35 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Plain unit tests (no Spring context) for the in-memory AccountRepository.
- * AccountRepository has no Spring/MySQL dependencies of its own, so these run
- * without the live MySQL instance the rest of the suite requires.
+ * Integration test for the JPA-backed AccountRepository, against a real (embedded H2,
+ * not the app's MySQL) database via {@code @DataJpaTest} - this replaces the old plain
+ * unit test that exercised an in-memory ConcurrentHashMap directly. The filtering/
+ * sorting/pagination in {@code search()} now lives in a Spring Data {@code Specification}
+ * translated into real SQL, so it needs an actual database to verify; a Mockito-mocked
+ * {@code AccountJpaRepository} could only assert "was called", not that the WHERE clause
+ * is correct. {@code @DataJpaTest} auto-configures the embedded H2 datasource (already a
+ * project dependency) instead of the MySQL one in application.yml and wraps each test in
+ * a rolled-back transaction, so no live MySQL instance is needed for this class - unlike
+ * the rest of the {@code @SpringBootTest} suite.
+ * <p>
+ * AccountRepository itself is a plain {@code @Repository} class, not a Spring Data
+ * interface, so {@code @DataJpaTest}'s component scan won't auto-create it as a bean;
+ * it's instantiated directly here around the real, Spring-managed {@link AccountJpaRepository}.
  */
+@DataJpaTest
+@ContextConfiguration(classes = SpringBootProjectsApplication.class)
+// application.yml hardcodes hibernate.dialect=MySQLDialect for the real app; @DataJpaTest
+// swaps in embedded H2 for the datasource but doesn't touch that dialect override, so it
+// has to be cleared here or Hibernate tries to run MySQL-flavored DDL against H2 and every
+// table comes up missing.
+@TestPropertySource(properties = {
+        "spring.jpa.properties.hibernate.dialect=",
+        "spring.jpa.hibernate.ddl-auto=create-drop"
+})
 class AccountRepositoryTest {
+
+    @Autowired
+    private AccountJpaRepository accountJpaRepository;
 
     private AccountRepository accountRepository;
 
@@ -40,9 +70,7 @@ class AccountRepositoryTest {
                 .minimumAge(18)
                 .maxStatementRangeMonths(12)
                 .build();
-        // Constructor seeds demo data (CH-0000088291, SV-0000044102, ...); irrelevant to these tests
-        // since each test uses its own freshly-created account number.
-        accountRepository = new AccountRepository(constraints);
+        accountRepository = new AccountRepository(accountJpaRepository, constraints);
     }
 
     private Account newCheckingAccount() {
@@ -119,7 +147,7 @@ class AccountRepositoryTest {
                 .maximumDepositAmountByCash(BigDecimal.valueOf(10_000))
                 .minimumAge(18)
                 .build();
-        AccountRepository repository = new AccountRepository(strictConstraints);
+        AccountRepository repository = new AccountRepository(accountJpaRepository, strictConstraints);
         Account saved = repository.save(newCheckingAccount());
         String accountNumber = saved.getCheckingAccountNumber();
         repository.deposit(accountNumber, AccountType.CHECKING, new BigDecimal("150.00"));
@@ -190,8 +218,10 @@ class AccountRepositoryTest {
     }
 
     @Test
-    void findByAccountNumber_seededMockAccount_isFound() {
-        assertThat(accountRepository.findByAccountNumber("CH-0000088291")).isPresent();
+    void findByAccountNumber_savedAccount_isFound() {
+        Account saved = accountRepository.save(newCheckingAccount());
+
+        assertThat(accountRepository.findByAccountNumber(saved.getCheckingAccountNumber())).isPresent();
     }
 
     @Test

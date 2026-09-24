@@ -4,7 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="500bfae8-b424-4f4d-b8ec-4b2725646d06" name="Changes" comment="Claude.md and configuration , setting.local.json etc" />
+    <list default="true" id="500bfae8-b424-4f4d-b8ec-4b2725646d06" name="Changes" comment="Claude.md and configuration , setting.local.json etc">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/domain/Account.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/domain/Account.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/messages/BankingMessages.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/messages/BankingMessages.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/repository/AccountRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/repository/AccountRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/repository/TransactionRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/repository/TransactionRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/bee/banking/repository/WithdrawalRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/bee/banking/repository/WithdrawalRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/bee/banking/repository/AccountRepositoryTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/bee/banking/repository/AccountRepositoryTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/org/bee/banking/service/ClientAccountServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/bee/banking/service/ClientAccountServiceTest.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -184,7 +193,7 @@
       <workItem from="1789490859106" duration="2743000" />
       <workItem from="1789612767360" duration="55487000" />
       <workItem from="1789851823700" duration="19964000" />
-      <workItem from="1790087877417" duration="19669000" />
+      <workItem from="1790087877417" duration="22512000" />
     </task>
     <task id="LOCAL-00010" summary="Find All Method Refactored.">
       <option name="closed" value="true" />

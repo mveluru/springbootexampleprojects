@@ -16,7 +16,7 @@ public final class BankingMessages {
     public static final String ACCOUNT_NOT_FOUND = "Account not found: %s";
     public static final String ACCOUNT_CLOSED = "Account %s is closed and cannot be used for transactions";
     public static final String ACCOUNT_ALREADY_CLOSED = "Account %s is already closed";
-    public static final String UNSUPPORTED_SORT_PROPERTY = "Unsupported sort property: %s (supported: createdDate, closedDate, accountStatus, checkingAccountNumber, savingAccountNumber)";
+    public static final String UNSUPPORTED_SORT_PROPERTY = "Unsupported sort property: %s (supported: createdDate, closedDate, accountStatus, accountNumber)";
     public static final String CREATED_DATE_RANGE_INVALID = "createdFrom (%s) must not be after createdTo (%s)";
     public static final String CLOSED_DATE_RANGE_INVALID = "closedFrom (%s) must not be after closedTo (%s)";
     public static final String MONTHS_MUST_BE_POSITIVE = "months must be positive, got %d";

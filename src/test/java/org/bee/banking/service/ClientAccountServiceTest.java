@@ -3,7 +3,6 @@ package org.bee.banking.service;
 import org.bee.banking.component.AccountMapper;
 import org.bee.banking.component.WithdrawalMapper;
 import org.bee.banking.domain.Account;
-import org.bee.banking.domain.AccountTransaction;
 import org.bee.banking.domain.AccountType;
 import org.bee.banking.domain.BulkCloseAccountsResult;
 import org.bee.banking.domain.DepositForm;
@@ -31,6 +30,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -39,8 +39,9 @@ import static org.mockito.Mockito.when;
 /**
  * Unit tests for the banking business rules in ClientAccountService: age gating on
  * registration, account-number/prefix validation on withdraw/deposit, and account
- * closure. Collaborators are mocked or (for the pure mappers/in-memory repositories)
- * used as real instances, so no Spring context or MySQL is needed.
+ * closure. AccountRepository/TransactionRepository/WithdrawalRepository are now
+ * JPA-backed (see their constructors), so they're mocked here rather than instantiated
+ * directly - no Spring context or MySQL is needed for this test class either way.
  */
 @ExtendWith(MockitoExtension.class)
 class ClientAccountServiceTest {
@@ -49,10 +50,13 @@ class ClientAccountServiceTest {
     private AccountRepository accountRepository;
     @Mock
     private NotificationService notificationService;
+    @Mock
+    private TransactionRepository transactionRepository;
+    @Mock
+    private WithdrawalRepository withdrawalRepository;
 
     private ClientAccountService clientAccountService;
     private AccountConstraints accountConstraints;
-    private TransactionRepository transactionRepository;
 
     @BeforeEach
     void setUp() {
@@ -62,13 +66,12 @@ class ClientAccountServiceTest {
                 .checkingMinimumBalance(BigDecimal.ZERO)
                 .savingMinimumBalance(BigDecimal.ZERO)
                 .build();
-        transactionRepository = new TransactionRepository();
 
         clientAccountService = new ClientAccountService(
                 accountRepository,
                 AccountMapper.INSTANCE,
                 WithdrawalMapper.INSTANCE,
-                new WithdrawalRepository(),
+                withdrawalRepository,
                 transactionRepository,
                 accountConstraints,
                 notificationService);
@@ -225,12 +228,10 @@ class ClientAccountServiceTest {
 
         clientAccountService.depositAndSaveToAccount(form);
 
-        List<AccountTransaction> recorded = transactionRepository.findByAccountNumber("CH-100");
-        assertThat(recorded).hasSize(1);
-        AccountTransaction transaction = recorded.get(0);
-        assertThat(transaction.getTransactionType()).isEqualTo(TransactionType.DEPOSIT);
-        assertThat(transaction.getDepositType()).isEqualTo("cash");
-        assertThat(transaction.getAmount()).isEqualByComparingTo(new BigDecimal("50.00"));
-        assertThat(transaction.getBalanceAfter()).isEqualByComparingTo(new BigDecimal("150.00"));
+        verify(transactionRepository).recordTransaction(argThat(transaction ->
+                transaction.getTransactionType() == TransactionType.DEPOSIT
+                        && "cash".equals(transaction.getDepositType())
+                        && transaction.getAmount().compareTo(new BigDecimal("50.00")) == 0
+                        && transaction.getBalanceAfter().compareTo(new BigDecimal("150.00")) == 0));
     }
 }

@@ -13,6 +13,7 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(of = {"checkingAccountNumber", "savingAccountNumber"})
 public class Account implements Serializable {
     String checkingAccountNumber;
     String savingAccountNumber;

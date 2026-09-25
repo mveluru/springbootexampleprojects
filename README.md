@@ -216,6 +216,15 @@ Raw Spring Data repositories live in `org.bee.banking.repository.jpa` (`AccountJ
 | `GET` | `/actuator/health/liveness` | Kubernetes liveness probe — `UP` as long as the process is running; never reflects the MySQL connection |
 | `GET` | `/actuator/health/readiness` | Kubernetes readiness probe — `UP` only while the app's readiness state is `ACCEPTING_TRAFFIC` **and** the MySQL `db` health indicator is `UP` |
 
+### API documentation (Swagger UI / OpenAPI)
+
+| Method | Endpoint Path | Description |
+| :--- | :--- | :--- |
+| `GET` | `/swagger-ui/index.html` | Interactive Swagger UI for the banking module — full URL: `http://localhost:8081/brite/swagger-ui/index.html` |
+| `GET` | `/openapi/banking-openapi.yaml` | The raw OpenAPI 3.0.3 spec that Swagger UI loads |
+
+The spec is hand-written (not generated from the code), so update `src/main/resources/static/openapi/banking-openapi.yaml` whenever a banking controller, DTO, or error mapping changes. Loading the UI needs no `X-Customer-Id` header, but its "Try it out" calls do — click **Authorize** and enter a customer id first.
+
 ---
 
 ## 🧪 Building & Running

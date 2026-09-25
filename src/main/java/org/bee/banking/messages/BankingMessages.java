@@ -112,6 +112,8 @@ public final class BankingMessages {
     public static final String LOG_RATE_LIMIT_HEADER_MISSING = "Rate limit rejected request to {}: missing header {}";
     public static final String LOG_RATE_LIMIT_EXCEEDED = "Rate limit exceeded for customer {} on {}: daily limit of {} requests reached";
 
+    public static final String LOG_REQUEST_RECEIVED = "Request {}";
+
     // Shared domain/request validation messages (Address, AccountRegistrationRequest,
     // WithdrawalRequest, WithdrawalForm, DepositForm)
     public static final String VALIDATION_STREET_REQUIRED = "Street address is required";

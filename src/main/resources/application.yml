@@ -73,6 +73,9 @@ banking:
     enabled: true
     requests-per-day: 1000
     customer-header-name: X-Customer-Id
+  request-logging:
+    enabled: true
+    max-payload-length: 2000
 
 resilience4j:
   circuitbreaker:

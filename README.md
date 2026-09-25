@@ -172,10 +172,11 @@ Banking used to be a `ConcurrentHashMap`-backed mock store; it's now backed by r
 | `AddressEmbeddable` | — | `@Embeddable`, inlined as columns on `CustomerEntity`/`WithdrawalHistoryEntity` — no separate table. |
 | `AccountTransactionEntity` | `account_transactions` | One row per deposit/withdrawal, including `depositType`. |
 | `WithdrawalHistoryEntity` | `withdrawal_history` | Separate withdrawal-specific history (write-only, nothing reads it back — same as before the migration). |
+| `BankLocationEntity` | `bank_locations`, `bank_location_services` | A bank office and/or ATM: `locationType` (`OFFICE`/`ATM`/`BOTH`), address (`BankAddressEmbeddable`, inlined), office hours 08:00–16:00 in `America/Chicago` (Central time), office phone, and the set of `BankOperationServices` it serves (`BANKING`, `SAFE_DEPOSIT_LOCKER`, `LOANS_MORTGAGES`, `NOTARY`, `WIRE_TRANSFER`, `FOREIGN_EXCHANGE`, `ATM_CASH_WITHDRAWAL`, `ATM_DEPOSIT`) in the second table. ATM-only rows have no hours or phone. Domain shapes: `BankLocations`, `BankAddress`. |
 
 Raw Spring Data repositories live in `org.bee.banking.repository.jpa` (`AccountJpaRepository` — extends `JpaSpecificationExecutor` for the dynamic account-search filtering — plus `CustomerJpaRepository`, `AccountTransactionJpaRepository`, `WithdrawalHistoryJpaRepository`); application code never touches them directly. `AccountRepository`/`TransactionRepository`/`WithdrawalRepository` (same names/packages as before) wrap them and keep their old public method signatures.
 
-`AccountDataSeeder` seeds the 52 demo accounts on first startup, but only if the `accounts` table is empty — since data now persists across restarts, unconditional reseeding would create duplicates every time the app starts. Account numbers are still generated the same way as before (zero-padded 10-digit `CH-`/`SV-` numbers, starting from a `10001` counter), so previously-documented account numbers remain valid.
+`BankLocationDataSeeder` likewise seeds 20 demo bank locations (8 office, 6 ATM, 6 office+ATM across Central-time cities) when `bank_locations` is empty. `AccountDataSeeder` seeds the 52 demo accounts on first startup, but only if the `accounts` table is empty — since data now persists across restarts, unconditional reseeding would create duplicates every time the app starts. Account numbers are still generated the same way as before (zero-padded 10-digit `CH-`/`SV-` numbers, starting from a `10001` counter), so previously-documented account numbers remain valid.
 
 ### Resilience demo — `/v1/payment`
 

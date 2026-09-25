@@ -72,6 +72,29 @@ CREATE TABLE IF NOT EXISTS withdrawal_history (
     primary key (id)
 ) engine=InnoDB;
 
+CREATE TABLE IF NOT EXISTS bank_locations (
+    closes_at time(6),
+    opens_at time(6),
+    id bigint not null auto_increment,
+    phone_number varchar(20),
+    time_zone varchar(40) not null,
+    address_line1 varchar(255),
+    address_line2 varchar(255),
+    city varchar(255),
+    country varchar(255),
+    name varchar(255) not null,
+    state varchar(255),
+    zip varchar(255),
+    location_type enum ('ATM','BOTH','OFFICE') not null,
+    primary key (id)
+) engine=InnoDB;
+
+CREATE TABLE IF NOT EXISTS bank_location_services (
+    bank_location_id bigint not null,
+    service enum ('ATM_CASH_WITHDRAWAL','ATM_DEPOSIT','BANKING','FOREIGN_EXCHANGE','LOANS_MORTGAGES','NOTARY','SAFE_DEPOSIT_LOCKER','WIRE_TRANSFER') not null,
+    primary key (bank_location_id, service)
+) engine=InnoDB;
+
 CREATE TABLE IF NOT EXISTS events (
     timestamp datetime(6),
     email varchar(255),
@@ -94,6 +117,11 @@ alter table accounts
    add constraint FKn6x8pdp50os8bq5rbb792upse
    foreign key (customer_id)
    references customers (id);
+
+alter table bank_location_services
+   add constraint FKqy6h5bqixyoyin6roe8s2hhmf
+   foreign key (bank_location_id)
+   references bank_locations (id);
 
 alter table withdrawal_history
    add constraint FKiqdmc315ip4x3pj5y3qog2bpi

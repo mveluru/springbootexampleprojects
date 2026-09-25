@@ -1,23 +1,23 @@
-package org.bee.banking.domain;
+package org.bee.banking.entity;
 
+import jakarta.persistence.Embeddable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.io.Serializable;
-
 /**
- * Street address of a {@link BankLocations}. Same shape as the customer {@link Address},
- * minus the redundant {@code street} field.
+ * JPA-embeddable mirror of {@link org.bee.banking.domain.BankAddress}, inlined as columns on
+ * {@link BankLocationEntity}.
  */
-@Builder
+@Embeddable
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class BankAddress implements Serializable {
+@Builder
+public class BankAddressEmbeddable {
     private String addressLine1;
     private String addressLine2;
     private String city;

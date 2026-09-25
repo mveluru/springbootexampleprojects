@@ -19,6 +19,15 @@ public class BankingExceptionHandler {
                 .body(ex.getMessage());
     }
 
+    @ExceptionHandler(LocationNotFoundException.class)
+    public ResponseEntity<String> handleLocationNotFound(
+            LocationNotFoundException ex) {
+        log.warn(BankingMessages.LOG_HANDLER_LOCATION_NOT_FOUND, ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ex.getMessage());
+    }
+
     @ExceptionHandler(AccountClosedException.class)
     public ResponseEntity<String> handleAccountClosed(
             AccountClosedException ex) {

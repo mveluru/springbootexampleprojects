@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.bee.banking.domain.BankLocations;
 import org.bee.banking.domain.BankOperationServices;
 import org.bee.banking.domain.LocationType;
+import org.bee.banking.exception.LocationNotFoundException;
 import org.bee.banking.messages.BankingMessages;
 import org.bee.banking.repository.LocationBasedOperationRepository;
 import org.springframework.data.domain.Page;
@@ -22,5 +23,11 @@ public class LocationBasedOperationService {
                                              BankOperationServices service, Pageable pageable) {
         log.debug(BankingMessages.LOG_LOCATION_SEARCH, type, city, state, zip, service, pageable.getPageNumber());
         return locationRepository.search(type, city, state, zip, service, pageable);
+    }
+
+    /** @throws LocationNotFoundException (mapped to 404) if no location has this id */
+    public BankLocations getLocation(Long id) {
+        return locationRepository.findById(id)
+                .orElseThrow(() -> new LocationNotFoundException(String.format(BankingMessages.LOCATION_NOT_FOUND, id)));
     }
 }

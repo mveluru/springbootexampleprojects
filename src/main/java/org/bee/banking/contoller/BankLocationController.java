@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,5 +36,14 @@ public class BankLocationController {
             @RequestParam(required = false) BankOperationServices service,
             @PageableDefault(size = 20, sort = "name") Pageable pageable) {
         return ResponseEntity.ok(locationService.listLocations(type, city, state, zip, service, pageable));
+    }
+
+    /**
+     * Fetch one bank location by id; 404 if it doesn't exist.
+     * GET /v1/api/locations/3
+     */
+    @GetMapping("/{id}")
+    public ResponseEntity<BankLocations> getLocation(@PathVariable Long id) {
+        return ResponseEntity.ok(locationService.getLocation(id));
     }
 }

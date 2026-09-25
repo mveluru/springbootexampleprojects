@@ -143,4 +143,17 @@ class LocationBasedOperationRepositoryTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("phoneNumber");
     }
+
+    @Test
+    void findByIdReturnsTheMappedLocation() {
+        Long id = repository.search(null, "Austin", null, null, null, ALL).getContent().get(0).getId();
+        BankLocations found = repository.findById(id).orElseThrow();
+        assertThat(found.getName()).isEqualTo("Austin Downtown Branch");
+        assertThat(found.getServices()).contains(BankOperationServices.NOTARY);
+    }
+
+    @Test
+    void findByIdIsEmptyForUnknownId() {
+        assertThat(repository.findById(999_999L)).isEmpty();
+    }
 }

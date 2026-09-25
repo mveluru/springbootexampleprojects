@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -69,6 +70,11 @@ public class LocationBasedOperationRepository {
                 ? PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), toEntitySort(pageable.getSort()))
                 : pageable;
         return bankLocationJpaRepository.findAll(spec, entityPageable).map(this::toDomain);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<BankLocations> findById(Long id) {
+        return bankLocationJpaRepository.findById(id).map(this::toDomain);
     }
 
     private Specification<BankLocationEntity> addressEqualsIgnoreCase(String field, String value) {

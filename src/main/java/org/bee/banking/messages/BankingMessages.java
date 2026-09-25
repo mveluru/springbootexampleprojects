@@ -14,6 +14,7 @@ public final class BankingMessages {
     public static final String DEPOSIT_TYPE_INVALID = "Deposit type must be 'cash' or 'check'";
     public static final String INSUFFICIENT_FUNDS = "Insufficient funds in account %s";
     public static final String ACCOUNT_NOT_FOUND = "Account not found: %s";
+    public static final String LOCATION_NOT_FOUND = "Bank location not found: %s";
     public static final String ACCOUNT_CLOSED = "Account %s is closed and cannot be used for transactions";
     public static final String ACCOUNT_ALREADY_CLOSED = "Account %s is already closed";
     public static final String UNSUPPORTED_SORT_PROPERTY = "Unsupported sort property: %s (supported: createdDate, closedDate, accountStatus, accountNumber)";
@@ -82,6 +83,7 @@ public final class BankingMessages {
 
     // BankingExceptionHandler log messages
     public static final String LOG_HANDLER_ACCOUNT_NOT_FOUND = "Account not found: {}";
+    public static final String LOG_HANDLER_LOCATION_NOT_FOUND = "Bank location not found: {}";
     public static final String LOG_HANDLER_ACCOUNT_CLOSED = "Account closed: {}";
     public static final String LOG_HANDLER_INSUFFICIENT_FUNDS = "Insufficient funds: {}";
     public static final String LOG_HANDLER_INVALID_REQUEST = "Invalid banking request: {}";

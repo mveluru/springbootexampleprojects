@@ -5,6 +5,7 @@ import org.bee.banking.domain.BankLocations;
 import org.bee.banking.domain.BankOperationServices;
 import org.bee.banking.domain.LocationType;
 import org.bee.banking.exception.BankingExceptionHandler;
+import org.bee.banking.exception.LocationNotFoundException;
 import org.bee.banking.service.LocationBasedOperationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -105,5 +106,32 @@ class BankLocationControllerTest {
     @Test
     void unknownTypeValueIsBadRequest() throws Exception {
         mockMvc.perform(get("/v1/api/locations").param("type", "KIOSK")).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getByIdReturnsTheLocation() throws Exception {
+        BankLocations atm = BankLocations.builder().id(4L).name("San Antonio Riverwalk ATM")
+                .locationType(LocationType.ATM).services(Set.of(BankOperationServices.ATM_DEPOSIT)).build();
+        when(service.getLocation(4L)).thenReturn(atm);
+
+        mockMvc.perform(get("/v1/api/locations/4"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(4))
+                .andExpect(jsonPath("$.name").value("San Antonio Riverwalk ATM"))
+                .andExpect(jsonPath("$.opensAt").doesNotExist());
+    }
+
+    @Test
+    void getByIdReturns404TextWhenMissing() throws Exception {
+        when(service.getLocation(99L)).thenThrow(new LocationNotFoundException("Bank location not found: 99"));
+
+        mockMvc.perform(get("/v1/api/locations/99"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Bank location not found: 99"));
+    }
+
+    @Test
+    void getByIdWithNonNumericIdIsBadRequest() throws Exception {
+        mockMvc.perform(get("/v1/api/locations/abc")).andExpect(status().isBadRequest());
     }
 }

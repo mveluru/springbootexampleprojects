@@ -615,6 +615,45 @@ paths:
         '429':
           $ref: '#/components/responses/TooManyRequests'
 
+  /v1/api/locations/{id}:
+    get:
+      tags: [Locations]
+      operationId: getBankLocation
+      summary: Get one bank location by id
+      description: |
+        Returns a single office/ATM. Ids are the `id` values returned by the location search.
+        A non-numeric id is rejected with Spring Boot's default JSON error (`400`).
+      parameters:
+        - $ref: '#/components/parameters/LocationIdPath'
+      responses:
+        '200':
+          description: The location.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BankLocation'}
+              example:
+                id: 4
+                name: San Antonio Riverwalk ATM
+                bankAddress:
+                  addressLine1: 100 E Commerce St
+                  addressLine2: null
+                  city: San Antonio
+                  state: TX
+                  zip: '78205'
+                  country: USA
+                locationType: ATM
+                opensAt: null
+                closesAt: null
+                timeZone: America/Chicago
+                phoneNumber: null
+                services: [ATM_CASH_WITHDRAWAL, ATM_DEPOSIT]
+        '400':
+          $ref: '#/components/responses/BadRequestJson'
+        '404':
+          $ref: '#/components/responses/LocationNotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
   /v1/client/name:
     get:
       tags: [Clients]
@@ -739,6 +778,13 @@ components:
         10-digit number.
       schema: {type: string}
       example: CH-0000088291
+    LocationIdPath:
+      name: id
+      in: path
+      required: true
+      description: Bank location id.
+      schema: {type: integer, format: int64}
+      example: 4
     NotifyName:
       name: name
       in: query
@@ -773,6 +819,12 @@ components:
         text/plain:
           schema: {type: string}
           example: 'Account not found: CH-9999999999'
+    LocationNotFound:
+      description: No bank location with that id. Plain-text body.
+      content:
+        text/plain:
+          schema: {type: string}
+          example: 'Bank location not found: 999'
     TooManyRequests:
       description: >-
         The calling customer's daily quota (`banking.rate-limit.requests-per-day`) is

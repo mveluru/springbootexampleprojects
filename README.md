@@ -10,7 +10,7 @@ A Spring Boot 3 REST application demonstrating configuration properties binding 
 - **Configs API**: Exposes endpoints under `/v1/configs` to query live application, email, and SMS configurations.
 - **Product Catalog API**: Exposes endpoints under `/v1/product` to list, look up, and add products (in-memory catalog).
 - **Banking APIs**: Client/account lookup, registration, withdrawal, and deposit (`/v1/client`, `/v1/api/accounts`) — accounts, customers, transactions, and withdrawal history are persisted via Spring Data JPA to the same MySQL database as the events module (see below), so data survives app restarts — plus async notification demos (`/notify`, `/report`) backed by `@Async`. Account numbers are always `CH-`/`SV-` (checking/savings) followed by a zero-padded 10-digit number (e.g. `CH-0000088291`), whether seeded or generated on registration. 52 demo accounts (26 checking, 26 savings) are seeded on first startup against an empty database (see [Data Model](#-banking-data-model-jpa) below).
-- **Banking API Gateway & Rate Limiter**: Every banking endpoint (`/v1/api/accounts/**`, `/v1/client/**`, `/v1/payment/**`, `/notify`, `/notify-sms`, `/report`) sits behind a `Filter`-based gateway ingress layer that requires an `X-Customer-Id` header and caps each customer to a configurable number of requests per day (`banking.rate-limit`, default 1000/day) — see [Banking API gateway](#-banking-api-gateway--rate-limiter) below. Retail/events/configs endpoints are unaffected.
+- **Banking API Gateway & Rate Limiter**: Every banking endpoint (`/v1/api/accounts/**`, `/v1/api/locations`, `/v1/client/**`, `/v1/payment/**`, `/notify`, `/notify-sms`, `/report`) sits behind a `Filter`-based gateway ingress layer that requires an `X-Customer-Id` header and caps each customer to a configurable number of requests per day (`banking.rate-limit`, default 1000/day) — see [Banking API gateway](#-banking-api-gateway--rate-limiter) below. Retail/events/configs endpoints are unaffected.
 - **Business Transaction ID (btid) Tracing**: The same gateway stamps every banking request with a unique `btid` (`X-BTID` response header) before it reaches any controller. The id is stored in SLF4J's MDC, so every log line from every layer of that request — controller, service, repository — carries it, letting you grep one request's full log trail with a single id.
 - **Account Constraints**: Configurable business rules (`banking.constraints`) enforced on registration/withdrawal/deposit — minimum age to open an account, minimum balance retained after a withdrawal (checking/savings), and a maximum single cash-deposit amount.
 - **Bank Statement**: `/v1/api/accounts/{accountNumber}/statement` returns an account's deposit/withdrawal history for a given date range, capped by a configurable maximum range in months.
@@ -147,12 +147,13 @@ All REST endpoints are prefixed with `http://localhost:8081/brite`:
 | `POST` | `/v1/api/accounts/{accountNumber}/close` | Closes a checking/savings account (status `ACTIVE` → `CLOSED`, stamps `closedDate`); `400` if already closed, `404` if the account doesn't exist |
 | `POST` | `/v1/api/accounts/close` | Bulk-closes multiple accounts in one call (body: `{"accountNumbers": [...]}`). Best-effort — an invalid/already-closed account number doesn't block the others; the `200` response carries `closedAccounts` (the ones that succeeded) and `failures` (`accountNumber` + `reason` for the rest). `400` if `accountNumbers` is empty/missing |
 | `GET` | `/v1/api/accounts/{accountNumber}/statement?beginDate=yyyy-MM-dd&endDate=yyyy-MM-dd` | Returns a bank statement (deposit/withdrawal history) for the account in the given range; each transaction includes `depositType` (`"cash"`/`"check"` for deposits, `null` for withdrawals); `400` if the range exceeds the configured maximum months, `404` if the account doesn't exist |
+| `GET` | `/v1/api/locations?type=&city=&state=&zip=&service=&page=&size=&sort=` | Searches bank offices/ATMs, paginated (real JPA `Specification` query, not cached). All filters optional and AND'd; `city`/`state`/`zip` are case-insensitive exact matches. `type` matches by capability: `OFFICE` returns offices **and** office+ATM branches, `ATM` returns ATMs **and** office+ATM branches, `BOTH` only the branches with both. `service` is one of `BANKING`, `SAFE_DEPOSIT_LOCKER`, `LOANS_MORTGAGES`, `NOTARY`, `WIRE_TRANSFER`, `FOREIGN_EXCHANGE`, `ATM_CASH_WITHDRAWAL`, `ATM_DEPOSIT`. Sortable by `name` (default), `locationType`, `city`, `state`; default `size=20`. Each row has `name`, `bankAddress`, `locationType`, office `opensAt`/`closesAt` (`08:00:00`/`16:00:00`, wall clock in `timeZone` `America/Chicago`), office `phoneNumber` and `services` — hours and phone are `null` for ATM-only rows. `400` for an unsupported `sort` property or unknown `type`/`service` |
 | `GET` | `/notify?name={name}` | Fire-and-forget async email notification demo |
 | `GET` | `/report` | Async task that returns a completed report string |
 
 ### Banking API gateway & rate limiter
 
-`BankingRateLimitFilter` (`org.bee.banking.gateway`) is a servlet `Filter` registered only for the banking module's URL patterns (`/v1/api/accounts/*`, `/v1/client/*`, `/v1/payment/*`, `/notify`, `/notify-sms`, `/report`) — it runs before `DispatcherServlet`, so rejected requests never reach a controller. It acts as a lightweight API-gateway ingress layer with two responsibilities:
+`BankingRateLimitFilter` (`org.bee.banking.gateway`) is a servlet `Filter` registered only for the banking module's URL patterns (`/v1/api/accounts/*`, `/v1/api/locations`, `/v1/client/*`, `/v1/payment/*`, `/notify`, `/notify-sms`, `/report`) — it runs before `DispatcherServlet`, so rejected requests never reach a controller. It acts as a lightweight API-gateway ingress layer with two responsibilities:
 
 1. **Customer identification** — every request must carry the header configured by `banking.rate-limit.customer-header-name` (default `X-Customer-Id`). Missing/blank header → `400` with a plain-text explanation.
 2. **Per-customer daily rate limit** — each customer ID is capped at `banking.rate-limit.requests-per-day` (default **1000**) requests per calendar day, tracked in-memory and reset at midnight. Exceeding it → `429 Too Many Requests`.
@@ -291,6 +292,12 @@ curl -s -H "X-Customer-Id: demo-customer-1" "http://localhost:8081/brite/v1/api/
 
 # Override the default lookback window (last 6 months instead of 18)
 curl -s -H "X-Customer-Id: demo-customer-1" "http://localhost:8081/brite/v1/api/accounts?months=6"
+
+# Find ATMs in Texas that accept deposits (office+ATM branches are included), sorted by city
+curl -H "X-Customer-Id: cust-1" "http://localhost:8081/brite/v1/api/locations?type=ATM&state=TX&service=ATM_DEPOSIT&sort=city,asc"
+
+# Bank offices with safe-deposit lockers
+curl -H "X-Customer-Id: cust-1" "http://localhost:8081/brite/v1/api/locations?type=OFFICE&service=SAFE_DEPOSIT_LOCKER"
 
 # Look Up a Client Account (banking endpoints require X-Customer-Id, rate-limited to 1000/day)
 curl -s -X POST http://localhost:8081/brite/v1/api/accounts/lookup \

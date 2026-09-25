@@ -6,7 +6,7 @@ info:
   description: |
     REST API for the `org.bee.banking` module of the SBProjects Spring Boot application:
     account registration, lookup, deposit/withdrawal, closing (single and bulk), paginated
-    account-status search, bank statements, plus the module's async-notification and
+    account-status search, bank office/ATM location search, bank statements, plus the module's async-notification and
     Resilience4j payment demo endpoints.
 
     ## Gateway behavior (applies to every endpoint in this document)
@@ -51,6 +51,8 @@ servers:
 tags:
   - name: Accounts
     description: Account registration, lookup, transactions, closing, search and statements.
+  - name: Locations
+    description: Bank offices and ATMs.
   - name: Clients
     description: Sample client record.
   - name: Payments
@@ -505,6 +507,114 @@ paths:
         '429':
           $ref: '#/components/responses/TooManyRequests'
 
+  /v1/api/locations:
+    get:
+      tags: [Locations]
+      operationId: listBankLocations
+      summary: Search bank offices and ATMs (paginated)
+      description: |
+        Returns bank locations filtered by any combination of the optional filters, paginated
+        and sorted with real SQL (Spring Data `Specification`). Not cached.
+
+        **`type` matches by capability**, not by the stored value: `OFFICE` returns offices
+        *and* office+ATM branches (`BOTH`), `ATM` returns ATMs *and* `BOTH` branches, and
+        `BOTH` returns only branches that have both. `city`, `state` and `zip` are
+        case-insensitive exact matches; `service` matches locations that serve that operation.
+
+        Office hours (`opensAt`/`closesAt`) and `phoneNumber` belong to the office, so they are
+        `null` for `ATM` locations.
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema: {$ref: '#/components/schemas/LocationType'}
+        - name: city
+          in: query
+          required: false
+          schema: {type: string}
+          example: Chicago
+        - name: state
+          in: query
+          required: false
+          description: Two-letter state code (case-insensitive).
+          schema: {type: string}
+          example: TX
+        - name: zip
+          in: query
+          required: false
+          schema: {type: string}
+          example: '60603'
+        - name: service
+          in: query
+          required: false
+          schema: {$ref: '#/components/schemas/BankOperationServices'}
+        - name: page
+          in: query
+          required: false
+          description: Zero-based page index.
+          schema: {type: integer, minimum: 0, default: 0}
+        - name: size
+          in: query
+          required: false
+          description: Page size.
+          schema: {type: integer, minimum: 1, default: 20}
+        - name: sort
+          in: query
+          required: false
+          description: >-
+            `property[,asc|desc]`; repeat the parameter for multiple sort keys. Allowed
+            properties: `name`, `locationType`, `city`, `state`. Anything else returns `400`.
+          style: form
+          explode: true
+          schema:
+            type: array
+            items: {type: string}
+            default: [name]
+          example: ['city,asc']
+      responses:
+        '200':
+          description: One page of matching locations (empty `content` if none match).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BankLocationPage'}
+              example:
+                content:
+                  - id: 3
+                    name: Houston Galleria Branch
+                    bankAddress:
+                      addressLine1: 5085 Westheimer Rd
+                      addressLine2: null
+                      city: Houston
+                      state: TX
+                      zip: '77056'
+                      country: USA
+                    locationType: BOTH
+                    opensAt: '08:00:00'
+                    closesAt: '16:00:00'
+                    timeZone: America/Chicago
+                    phoneNumber: (713) 555-0103
+                    services: [BANKING, SAFE_DEPOSIT_LOCKER, FOREIGN_EXCHANGE, ATM_CASH_WITHDRAWAL, ATM_DEPOSIT]
+                pageable:
+                  pageNumber: 0
+                  pageSize: 20
+                  sort: {empty: false, sorted: true, unsorted: false}
+                  offset: 0
+                  paged: true
+                  unpaged: false
+                totalElements: 1
+                totalPages: 1
+                last: true
+                first: true
+                size: 20
+                number: 0
+                sort: {empty: false, sorted: true, unsorted: false}
+                numberOfElements: 1
+                empty: false
+        '400':
+          $ref: '#/components/responses/BadRequestText'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
   /v1/client/name:
     get:
       tags: [Clients]
@@ -650,6 +760,8 @@ components:
               value: months must be positive, got 0
             sort:
               value: 'Unsupported sort property: balance (supported: createdDate, closedDate, accountStatus, accountNumber)'
+            locationSort:
+              value: 'Unsupported sort property: phoneNumber (supported: name, locationType, city, state)'
     BadRequestJson:
       description: Request body/parameter failed validation. Spring Boot default JSON error body.
       content:
@@ -765,6 +877,62 @@ components:
         firstName: {type: string, example: Jane}
         lastName: {type: string, example: Doe}
 
+    LocationType:
+      type: string
+      description: >-
+        `OFFICE` is a staffed branch, `ATM` a stand-alone ATM, `BOTH` a branch with an ATM on site.
+      enum: [OFFICE, ATM, BOTH]
+
+    BankOperationServices:
+      type: string
+      description: >-
+        An operation a location serves. `ATM_*` values apply to `ATM`/`BOTH` locations; the rest
+        to `OFFICE`/`BOTH`.
+      enum: [BANKING, SAFE_DEPOSIT_LOCKER, LOANS_MORTGAGES, NOTARY, WIRE_TRANSFER, FOREIGN_EXCHANGE, ATM_CASH_WITHDRAWAL, ATM_DEPOSIT]
+
+    BankAddress:
+      type: object
+      properties:
+        addressLine1: {type: string, example: 5085 Westheimer Rd}
+        addressLine2: {type: string, nullable: true, example: Suite 100}
+        city: {type: string, example: Houston}
+        state: {type: string, example: TX}
+        zip: {type: string, example: '77056'}
+        country: {type: string, default: USA, example: USA}
+
+    BankLocation:
+      type: object
+      properties:
+        id: {type: integer, format: int64}
+        name: {type: string, example: Houston Galleria Branch}
+        bankAddress: {$ref: '#/components/schemas/BankAddress'}
+        locationType: {$ref: '#/components/schemas/LocationType'}
+        opensAt:
+          type: string
+          format: time
+          nullable: true
+          description: Office opening time (`HH:mm:ss`, wall clock in `timeZone`). Null for `ATM`.
+          example: '08:00:00'
+        closesAt:
+          type: string
+          format: time
+          nullable: true
+          description: Office closing time. Null for `ATM`.
+          example: '16:00:00'
+        timeZone:
+          type: string
+          description: IANA zone id for the hours; `America/Chicago` is Central time and follows daylight saving.
+          example: America/Chicago
+        phoneNumber:
+          type: string
+          nullable: true
+          description: Office phone. Null for `ATM`.
+          example: (713) 555-0103
+        services:
+          type: array
+          description: Operations served, in enum order.
+          items: {$ref: '#/components/schemas/BankOperationServices'}
+
     SortInfo:
       type: object
       properties:
@@ -789,6 +957,24 @@ components:
         content:
           type: array
           items: {$ref: '#/components/schemas/AccountStatusView'}
+        pageable: {$ref: '#/components/schemas/PageableInfo'}
+        totalElements: {type: integer, format: int64}
+        totalPages: {type: integer}
+        last: {type: boolean}
+        first: {type: boolean}
+        size: {type: integer}
+        number: {type: integer, description: Zero-based page index.}
+        sort: {$ref: '#/components/schemas/SortInfo'}
+        numberOfElements: {type: integer}
+        empty: {type: boolean}
+
+    BankLocationPage:
+      type: object
+      description: Standard Spring Data `Page` serialization.
+      properties:
+        content:
+          type: array
+          items: {$ref: '#/components/schemas/BankLocation'}
         pageable: {$ref: '#/components/schemas/PageableInfo'}
         totalElements: {type: integer, format: int64}
         totalPages: {type: integer}

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Brite Banking API</title>
+  <link rel="stylesheet" href="../webjars/swagger-ui/swagger-ui.css">
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="../webjars/swagger-ui/swagger-ui-bundle.js"></script>
+  <script>
+    // Relative URLs keep this working under the /brite context path.
+    window.ui = SwaggerUIBundle({
+      url: '../openapi/banking-openapi.yaml',
+      dom_id: '#swagger-ui',
+      deepLinking: true,
+      persistAuthorization: true
+    });
+  </script>
+</body>
+</html>

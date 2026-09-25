@@ -1,0 +1,1013 @@
+openapi: 3.0.3
+
+info:
+  title: Brite Banking API
+  version: 1.0.0
+  description: |
+    REST API for the `org.bee.banking` module of the SBProjects Spring Boot application:
+    account registration, lookup, deposit/withdrawal, closing (single and bulk), paginated
+    account-status search, bank statements, plus the module's async-notification and
+    Resilience4j payment demo endpoints.
+
+    ## Gateway behavior (applies to every endpoint in this document)
+
+    Every path below sits behind two servlet filters (`org.bee.banking.gateway`), which run
+    *before* the controllers:
+
+    1. **`BusinessTransactionIdFilter`** generates a UUID per request and returns it in the
+       `X-BTID` response header. The same id is stamped on every server log line for that
+       request, so quote it when reporting a problem.
+    2. **`BankingRateLimitFilter`** requires the customer-id header (default `X-Customer-Id`,
+       configurable via `banking.rate-limit.customer-header-name`) and caps each customer at
+       `banking.rate-limit.requests-per-day` requests/day (default 1000). A missing/blank
+       header is rejected with `400`; an exhausted quota with `429`. Both are **plain-text**
+       bodies written by the filter itself, not the JSON/text bodies produced by the
+       controllers' exception handler. Every non-rejected response carries
+       `X-RateLimit-Limit` and `X-RateLimit-Remaining`.
+
+    `X-Customer-Id` identifies the caller for rate limiting only. It is **not**
+    authentication - the API has no auth layer.
+
+    ## Error bodies
+
+    Business-rule failures (`BankingExceptionHandler`) return a bare `text/plain` message.
+    Bean-validation failures on request bodies (`@Valid`) and malformed parameters are not
+    handled by that advice and fall through to Spring Boot's default JSON error body
+    (`SpringErrorResponse`).
+
+    ## Persistence
+
+    Accounts, customers, transactions and withdrawal history are stored in MySQL via JPA.
+    Concurrent writes to one account are guarded by optimistic locking, so a losing
+    concurrent writer surfaces as a `500`.
+  contact:
+    name: Brite Solutions
+    email: britesupport@britesolutions.org
+
+servers:
+  - url: http://localhost:8081/brite
+    description: Local development (port 8081, context path /brite)
+
+tags:
+  - name: Accounts
+    description: Account registration, lookup, transactions, closing, search and statements.
+  - name: Clients
+    description: Sample client record.
+  - name: Payments
+    description: Resilience4j circuit-breaker + retry demo.
+  - name: Notifications
+    description: '`@Async` email/SMS/report demos.'
+
+security:
+  - CustomerId: []
+
+paths:
+  /v1/api/accounts:
+    get:
+      tags: [Accounts]
+      operationId: listAccounts
+      summary: Search accounts (paginated)
+      description: |
+        Returns account status rows filtered by any combination of the optional filters,
+        paginated and sorted with real SQL (Spring Data `Specification`). Results are cached
+        for 10 minutes; the cache is evicted whenever an account is registered or closed.
+
+        **Single vs. all accounts:** `accountNumber` is just another AND'd filter
+        (case-insensitive equality). Supplying it returns at most that one account, and it is
+        still subject to the other filters/date window - there is no separate
+        get-one-account endpoint.
+
+        **Default lookback:** if neither `createdFrom` nor `createdTo` is given, the created
+        date range defaults to `[today - months, today]` (`months` defaults to 18). Supplying
+        either explicit created-date bound disables that default and `months` is ignored.
+        Older accounts (e.g. the seeded closed ones) need `months=36` or an explicit
+        `createdFrom` to appear.
+
+        Balances are deliberately not exposed by this view.
+      parameters:
+        - name: accountNumber
+          in: query
+          required: false
+          description: Restrict to one account (case-insensitive exact match).
+          schema: {type: string}
+          example: CH-0000088291
+        - name: status
+          in: query
+          required: false
+          schema: {$ref: '#/components/schemas/AccountStatus'}
+        - name: createdFrom
+          in: query
+          required: false
+          description: Inclusive lower bound on `createdDate`. Must not be after `createdTo`.
+          schema: {type: string, format: date}
+        - name: createdTo
+          in: query
+          required: false
+          description: Inclusive upper bound on `createdDate`.
+          schema: {type: string, format: date}
+        - name: closedFrom
+          in: query
+          required: false
+          description: Inclusive lower bound on `closedDate`. Must not be after `closedTo`.
+          schema: {type: string, format: date}
+        - name: closedTo
+          in: query
+          required: false
+          description: Inclusive upper bound on `closedDate`.
+          schema: {type: string, format: date}
+        - name: months
+          in: query
+          required: false
+          description: >-
+            Lookback window in months for the default created-date range. Ignored when
+            `createdFrom` or `createdTo` is supplied. Must be positive (validated even when
+            ignored).
+          schema: {type: integer, format: int32, minimum: 1, default: 18}
+        - name: page
+          in: query
+          required: false
+          description: Zero-based page index.
+          schema: {type: integer, minimum: 0, default: 0}
+        - name: size
+          in: query
+          required: false
+          description: Page size.
+          schema: {type: integer, minimum: 1, default: 20}
+        - name: sort
+          in: query
+          required: false
+          description: >-
+            `property[,asc|desc]`; repeat the parameter for multiple sort keys. Allowed
+            properties: `createdDate`, `closedDate`, `accountStatus`, `accountNumber`.
+            Anything else returns `400`.
+          style: form
+          explode: true
+          schema:
+            type: array
+            items: {type: string}
+            default: [createdDate]
+          example: ['createdDate,desc']
+      responses:
+        '200':
+          description: One page of matching accounts (empty `content` if none match).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AccountStatusViewPage'}
+              example:
+                content:
+                  - accountNumber: CH-0000088291
+                    accountType: CHECKING
+                    accountStatus: ACTIVE
+                    createdDate: '2026-06-24'
+                    closedDate: null
+                    firstName: Jane
+                    lastName: Doe
+                pageable:
+                  pageNumber: 0
+                  pageSize: 20
+                  sort: {empty: false, sorted: true, unsorted: false}
+                  offset: 0
+                  paged: true
+                  unpaged: false
+                totalElements: 1
+                totalPages: 1
+                last: true
+                first: true
+                size: 20
+                number: 0
+                sort: {empty: false, sorted: true, unsorted: false}
+                numberOfElements: 1
+                empty: false
+        '400':
+          $ref: '#/components/responses/BadRequestText'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /v1/api/accounts/lookup:
+    post:
+      tags: [Accounts]
+      operationId: lookupAccount
+      summary: Look up an account and its customer profile
+      description: Returns the full `Account` (including balance and customer) for an account number.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AccountLookupRequest'}
+            example: {accountNumber: CH-0000088291}
+      responses:
+        '200':
+          description: Account found.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Account'}
+        '400':
+          $ref: '#/components/responses/BadRequestJson'
+        '404':
+          description: No account with that number. Plain-text body.
+          content:
+            text/plain:
+              schema: {type: string}
+              example: Account number not found in our records.
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /v1/api/accounts/newaccount:
+    post:
+      tags: [Accounts]
+      operationId: registerAccount
+      summary: Register a new customer and account
+      description: |
+        Creates a customer and a new checking **or** savings account. The account number is
+        generated server-side as `CH-` (checking) or `SV-` (savings) followed by a
+        zero-padded 10-digit number. New accounts start `ACTIVE` with `createdDate` = today.
+
+        Rules beyond field validation: the customer must be at least
+        `banking.constraints.minimum-age` (default 18) years old and born in 1940 or later.
+        Triggers an async email and SMS notification and evicts the account-search cache.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/AccountRegistrationRequest'}
+            example:
+              firstName: Jane
+              lastName: Doe
+              dateOfBirth: 03/15/1990
+              street: '111'
+              addressLine1: Leafvillage
+              addressLine2: Unit1
+              city: Leander
+              state: TX
+              zip: '78717'
+              accountType: checking
+      responses:
+        '201':
+          description: Account created.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Account'}
+        '400':
+          description: >-
+            Validation failure (JSON body), or a business rule was violated - under-age
+            customer, unrecognized `accountType` (plain-text body).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SpringErrorResponse'}
+            text/plain:
+              schema: {type: string}
+              example: Customer must be at least 18 years old to open an account
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /v1/api/accounts/withdraw:
+    post:
+      tags: [Accounts]
+      operationId: withdraw
+      summary: Withdraw funds
+      description: |
+        Withdraws `withdrawAmount` from a checking or savings account. The account type is
+        derived from the account-number prefix (`CH` -> `CHECKING`, `SV` -> `SAVINGS`) and
+        `accountType` in the body **must match it**.
+
+        Checks, in order: account exists; account is not `CLOSED`; sufficient funds; the
+        remaining balance must stay at or above the minimum
+        (`banking.constraints.checking-minimum-balance` 25.00 / `saving-minimum-balance` 100.00
+        by default). A completed withdrawal is recorded in withdrawal history and the
+        transaction ledger, and triggers an async email/SMS.
+
+        `withdrawalDate` and `withdrawalStatus` are accepted but ignored - the server stamps
+        today's date and `COMPLETED`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/WithdrawalRequest'}
+            example:
+              accountNumber: CH-0000088291
+              accountType: CHECKING
+              withdrawAmount: 100.75
+              firstName: Jane
+              lastName: Doe
+              street: '111'
+              addressLine1: Leafvillage
+              city: Leander
+              state: TX
+              zip: '78717'
+      responses:
+        '200':
+          description: Withdrawal completed; returns the account with its updated balance.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Account'}
+        '400':
+          description: >-
+            Validation failure (JSON), or a business rule failed (plain text): non-positive
+            amount, unrecognized prefix, type/prefix mismatch, account closed, insufficient
+            funds, or minimum balance would be violated.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SpringErrorResponse'}
+            text/plain:
+              schema: {type: string}
+              examples:
+                insufficientFunds:
+                  value: Insufficient funds in account CH-0000088291
+                minimumBalance:
+                  value: 'Withdrawal declined: account CH-0000088291 must retain a minimum balance of 25.00'
+                closed:
+                  value: Account CH-0000010004 is closed and cannot be used for transactions
+        '404':
+          $ref: '#/components/responses/AccountNotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /v1/api/accounts/deposit:
+    post:
+      tags: [Accounts]
+      operationId: deposit
+      summary: Deposit funds
+      description: |
+        Deposits `amount` into a checking or savings account. As with withdrawals, the
+        account type comes from the account-number prefix and `accountType` must match it.
+
+        `depositType` must be `cash` or `check` (case-insensitive). **Cash deposits are
+        capped** at `banking.constraints.maximum-deposit-amount-by-cash` (default 5000.00);
+        check deposits are not. A `CLOSED` account rejects deposits. Unlike withdrawals,
+        deposits do not trigger a notification.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/DepositForm'}
+            example:
+              accountNumber: SV-0000044102
+              accountType: SAVINGS
+              amount: 250.00
+              depositType: check
+              firstName: Jane
+              lastName: Doe
+              street: '111'
+              addressLine1: Leafvillage
+              city: Leander
+              state: TX
+              zip: '78717'
+      responses:
+        '200':
+          description: Deposit completed; returns the account with its updated balance.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Account'}
+        '400':
+          description: >-
+            Validation failure (JSON), or a business rule failed (plain text): non-positive
+            amount, unrecognized prefix, type/prefix mismatch, invalid deposit type, cash
+            limit exceeded, or account closed.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SpringErrorResponse'}
+            text/plain:
+              schema: {type: string}
+              examples:
+                cashLimit:
+                  value: Cash deposits cannot exceed 5000.00
+                depositType:
+                  value: Deposit type must be 'cash' or 'check'
+        '404':
+          $ref: '#/components/responses/AccountNotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /v1/api/accounts/{accountNumber}/close:
+    post:
+      tags: [Accounts]
+      operationId: closeAccount
+      summary: Close one account
+      description: >-
+        Transitions an `ACTIVE` account to `CLOSED` and stamps `closedDate` with today.
+        There is no reopen operation. Evicts the account-search cache.
+      parameters:
+        - $ref: '#/components/parameters/AccountNumberPath'
+      responses:
+        '200':
+          description: 'Account closed; returns it with `accountStatus: CLOSED`.'
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Account'}
+        '400':
+          description: Account is already closed. Plain-text body.
+          content:
+            text/plain:
+              schema: {type: string}
+              example: Account CH-0000010004 is already closed
+        '404':
+          $ref: '#/components/responses/AccountNotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /v1/api/accounts/close:
+    post:
+      tags: [Accounts]
+      operationId: closeAccounts
+      summary: Bulk-close accounts (best effort)
+      description: |
+        Closes many accounts in one call. **Best effort, not all-or-nothing:** an unknown or
+        already-closed account does not stop the rest. The response is always `200` when the
+        request itself is valid - inspect `closedAccounts` and `failures` for per-account
+        outcomes. Evicts the account-search cache once for the whole batch.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/BulkCloseAccountsRequest'}
+            example:
+              accountNumbers: [CH-0000088291, SV-0000020004, CH-9999999999]
+      responses:
+        '200':
+          description: Batch processed (individual accounts may still have failed).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BulkCloseAccountsResult'}
+              example:
+                closedAccounts:
+                  - checkingAccountNumber: CH-0000088291
+                    savingAccountNumber: null
+                    checkingBalance: 1500.00
+                    savingBalance: null
+                    accountType: CHECKING
+                    accountStatus: CLOSED
+                    createdDate: '2026-06-24'
+                    closedDate: '2026-09-24'
+                    customer: null
+                failures:
+                  - accountNumber: SV-0000020004
+                    reason: Account SV-0000020004 is already closed
+                  - accountNumber: CH-9999999999
+                    reason: 'Account not found: CH-9999999999'
+        '400':
+          $ref: '#/components/responses/BadRequestJson'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /v1/api/accounts/{accountNumber}/statement:
+    get:
+      tags: [Accounts]
+      operationId: getStatement
+      summary: Generate a bank statement
+      description: |
+        Returns the account's deposit/withdrawal transactions with `transactionDate` between
+        `beginDate` and `endDate` (both inclusive). `endDate` may not precede `beginDate`,
+        and the span may not exceed `banking.constraints.max-statement-range-months`
+        (default 18). Triggers an async email/SMS notification.
+      parameters:
+        - $ref: '#/components/parameters/AccountNumberPath'
+        - name: beginDate
+          in: query
+          required: true
+          schema: {type: string, format: date}
+        - name: endDate
+          in: query
+          required: true
+          schema: {type: string, format: date}
+      responses:
+        '200':
+          description: The statement.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/BankStatement'}
+              example:
+                accountNumber: CH-0000088291
+                beginDate: '2026-08-01'
+                endDate: '2026-09-24'
+                transactions:
+                  - accountNumber: CH-0000088291
+                    transactionType: WITHDRAWAL
+                    amount: 100.75
+                    balanceAfter: 1399.25
+                    transactionDate: '2026-09-10'
+                    depositType: null
+        '400':
+          description: >-
+            Missing/malformed date parameter (JSON), end date before begin date, or range
+            too long (plain text).
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/SpringErrorResponse'}
+            text/plain:
+              schema: {type: string}
+              examples:
+                order:
+                  value: End date cannot be before begin date
+                range:
+                  value: Statement date range cannot exceed 18 months
+        '404':
+          $ref: '#/components/responses/AccountNotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /v1/client/name:
+    get:
+      tags: [Clients]
+      operationId: getClient
+      summary: Get the sample client record
+      description: Returns a hard-coded sample `Customer`; not tied to persisted data.
+      responses:
+        '200':
+          description: Sample customer.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Customer'}
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /v1/payment/process:
+    post:
+      tags: [Payments]
+      operationId: processPayment
+      summary: Process a payment through a flaky downstream (resilience demo)
+      description: |
+        Calls a simulated bank service that fails ~40% of the time, wrapped in a Resilience4j
+        `@Retry` (3 attempts, jittered exponential backoff) around a `@CircuitBreaker`.
+        Failures never surface as HTTP errors: once retries are exhausted or the breaker is
+        open, the fallback returns a `200` with a "temporarily unavailable" message, so
+        clients must inspect the body.
+      responses:
+        '200':
+          description: Either the success message or the fallback message.
+          content:
+            text/plain:
+              schema: {type: string}
+              examples:
+                success:
+                  value: Successfully Processed
+                fallback:
+                  value: Payment service temporarily unavailable
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /notify:
+    get:
+      tags: [Notifications]
+      operationId: notifyUser
+      summary: Queue an async email notification
+      description: >-
+        Fire-and-forget: returns immediately; the email is "sent" on a background thread.
+        Skipped silently if `notification.email.enabled` is false.
+      parameters:
+        - $ref: '#/components/parameters/NotifyName'
+      responses:
+        '200':
+          description: Request accepted.
+          content:
+            text/plain:
+              schema: {type: string}
+              example: Email request accepted! Check console logs in 3 seconds.
+        '400':
+          $ref: '#/components/responses/BadRequestJson'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /notify-sms:
+    get:
+      tags: [Notifications]
+      operationId: notifyUserBySms
+      summary: Queue an async SMS notification
+      description: >-
+        Fire-and-forget. Skipped silently if `notification.sms.enabled` is false (the
+        default) or the daily SMS limit (`notification.sms.daily-limit`) has been reached -
+        the response is `200` either way.
+      parameters:
+        - $ref: '#/components/parameters/NotifyName'
+      responses:
+        '200':
+          description: Request accepted.
+          content:
+            text/plain:
+              schema: {type: string}
+              example: SMS request accepted! Check console logs in 3 seconds.
+        '400':
+          $ref: '#/components/responses/BadRequestJson'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /report:
+    get:
+      tags: [Notifications]
+      operationId: getReport
+      summary: Fetch an async-generated report
+      description: >-
+        Runs report generation asynchronously (`CompletableFuture`); the response is sent
+        once it completes.
+      responses:
+        '200':
+          description: The report text.
+          content:
+            text/plain:
+              schema: {type: string}
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+components:
+  securitySchemes:
+    CustomerId:
+      type: apiKey
+      in: header
+      name: X-Customer-Id
+      description: |
+        Customer identifier used solely for per-customer daily rate limiting - **not**
+        authentication; any non-blank value is accepted. The header name is configurable
+        (`banking.rate-limit.customer-header-name`) and the check can be turned off with
+        `banking.rate-limit.enabled: false`.
+
+  parameters:
+    AccountNumberPath:
+      name: accountNumber
+      in: path
+      required: true
+      description: >-
+        Account number: `CH-` (checking) or `SV-` (savings) followed by a zero-padded
+        10-digit number.
+      schema: {type: string}
+      example: CH-0000088291
+    NotifyName:
+      name: name
+      in: query
+      required: true
+      description: Recipient name to notify.
+      schema: {type: string}
+      example: Jane Doe
+
+  responses:
+    BadRequestText:
+      description: A business rule was violated. Plain-text message.
+      content:
+        text/plain:
+          schema: {type: string}
+          examples:
+            dateRange:
+              value: createdFrom (2026-05-01) must not be after createdTo (2026-01-01)
+            months:
+              value: months must be positive, got 0
+            sort:
+              value: 'Unsupported sort property: balance (supported: createdDate, closedDate, accountStatus, accountNumber)'
+    BadRequestJson:
+      description: Request body/parameter failed validation. Spring Boot default JSON error body.
+      content:
+        application/json:
+          schema: {$ref: '#/components/schemas/SpringErrorResponse'}
+    AccountNotFound:
+      description: No account with that number. Plain-text body.
+      content:
+        text/plain:
+          schema: {type: string}
+          example: 'Account not found: CH-9999999999'
+    TooManyRequests:
+      description: >-
+        The calling customer's daily quota (`banking.rate-limit.requests-per-day`) is
+        exhausted. Written by the gateway filter as plain text. (A missing/blank customer-id
+        header is rejected by the same filter with `400` and a plain-text message - see
+        *Gateway behavior*.)
+      headers:
+        X-BTID:
+          $ref: '#/components/headers/X-BTID'
+        X-RateLimit-Limit:
+          $ref: '#/components/headers/X-RateLimit-Limit'
+        X-RateLimit-Remaining:
+          $ref: '#/components/headers/X-RateLimit-Remaining'
+      content:
+        text/plain:
+          schema: {type: string}
+          example: 'Daily request limit exceeded for customer cust-42: max 1000 requests per day'
+
+  headers:
+    X-BTID:
+      description: Business transaction id (UUID) for this request; appears on every server log line for it.
+      schema: {type: string, format: uuid}
+    X-RateLimit-Limit:
+      description: Requests per day allowed for the calling customer.
+      schema: {type: integer}
+    X-RateLimit-Remaining:
+      description: Requests remaining today for the calling customer.
+      schema: {type: integer}
+
+  schemas:
+    AccountType:
+      type: string
+      description: >-
+        Only `CHECKING` and `SAVINGS` are usable - the other values exist in the enum but
+        no account of those kinds can be created or transacted against.
+      enum: [CHECKING, SAVINGS, INVESTMENT, RETIREMENT, CREDIT_OR_LOAN]
+
+    AccountStatus:
+      type: string
+      enum: [ACTIVE, CLOSED]
+
+    TransactionType:
+      type: string
+      enum: [DEPOSIT, WITHDRAWAL]
+
+    Address:
+      type: object
+      properties:
+        street: {type: string, example: '111'}
+        city: {type: string, example: Leander}
+        state: {type: string, example: TX}
+        zip: {type: string, example: '78717'}
+        country: {type: string, default: USA, example: USA}
+        addressLine1: {type: string, example: Leafvillage}
+        addressLine2: {type: string, nullable: true, example: Unit1}
+
+    Customer:
+      type: object
+      properties:
+        firstName: {type: string, example: Jane}
+        lastName: {type: string, example: Doe}
+        address: {$ref: '#/components/schemas/Address'}
+        dateOfBirth:
+          type: string
+          description: Format `MM/dd/yyyy`.
+          pattern: '^\d{2}/\d{2}/\d{4}$'
+          example: 03/15/1990
+        dateOfBirthValid:
+          type: boolean
+          readOnly: true
+          description: Derived - true when the birth year is 1940 or later.
+
+    Account:
+      type: object
+      description: |
+        A checking-or-savings account paired with its customer. Only the field pair that
+        matches `accountType` is populated: for `CHECKING`, `checkingAccountNumber` and
+        `checkingBalance` are set and the `saving*` pair is `null`; for `SAVINGS`, the reverse.
+      properties:
+        checkingAccountNumber: {type: string, nullable: true, example: CH-0000088291}
+        savingAccountNumber: {type: string, nullable: true, example: null}
+        checkingBalance: {type: number, nullable: true, example: 1500.00}
+        savingBalance: {type: number, nullable: true, example: null}
+        accountType: {$ref: '#/components/schemas/AccountType'}
+        accountStatus: {$ref: '#/components/schemas/AccountStatus'}
+        createdDate: {type: string, format: date, nullable: true}
+        closedDate: {type: string, format: date, nullable: true}
+        customer:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Customer'
+
+    AccountStatusView:
+      type: object
+      description: Flattened per-account row; never includes balance.
+      properties:
+        accountNumber: {type: string, example: CH-0000088291}
+        accountType: {$ref: '#/components/schemas/AccountType'}
+        accountStatus: {$ref: '#/components/schemas/AccountStatus'}
+        createdDate: {type: string, format: date}
+        closedDate: {type: string, format: date, nullable: true}
+        firstName: {type: string, example: Jane}
+        lastName: {type: string, example: Doe}
+
+    SortInfo:
+      type: object
+      properties:
+        empty: {type: boolean}
+        sorted: {type: boolean}
+        unsorted: {type: boolean}
+
+    PageableInfo:
+      type: object
+      properties:
+        pageNumber: {type: integer}
+        pageSize: {type: integer}
+        sort: {$ref: '#/components/schemas/SortInfo'}
+        offset: {type: integer, format: int64}
+        paged: {type: boolean}
+        unpaged: {type: boolean}
+
+    AccountStatusViewPage:
+      type: object
+      description: Standard Spring Data `Page` serialization.
+      properties:
+        content:
+          type: array
+          items: {$ref: '#/components/schemas/AccountStatusView'}
+        pageable: {$ref: '#/components/schemas/PageableInfo'}
+        totalElements: {type: integer, format: int64}
+        totalPages: {type: integer}
+        last: {type: boolean}
+        first: {type: boolean}
+        size: {type: integer}
+        number: {type: integer, description: Zero-based page index.}
+        sort: {$ref: '#/components/schemas/SortInfo'}
+        numberOfElements: {type: integer}
+        empty: {type: boolean}
+
+    AccountLookupRequest:
+      type: object
+      required: [accountNumber]
+      properties:
+        accountNumber:
+          type: string
+          minLength: 1
+          description: Must not be blank.
+          example: CH-0000088291
+
+    AccountRegistrationRequest:
+      type: object
+      required: [firstName, lastName, dateOfBirth, street, city, state, zip, addressLine1, accountType]
+      properties:
+        firstName: {type: string, minLength: 1, maxLength: 50, example: Jane}
+        lastName: {type: string, minLength: 1, maxLength: 50, example: Doe}
+        dateOfBirth:
+          type: string
+          description: >-
+            Format `MM/dd/yyyy`. Birth year must be 1940 or later, and the customer must be at
+            least the configured minimum age (default 18).
+          pattern: '^\d{2}/\d{2}/\d{4}$'
+          example: 03/15/1990
+        street: {type: string, minLength: 1, example: '111'}
+        city: {type: string, minLength: 1, example: Leander}
+        state:
+          type: string
+          description: Two uppercase letters.
+          pattern: '^[A-Z]{2}$'
+          example: TX
+        zip:
+          type: string
+          description: Exactly five digits.
+          pattern: '^\d{5}$'
+          example: '78717'
+        addressLine1: {type: string, minLength: 1, maxLength: 50, example: Leafvillage}
+        addressLine2: {type: string, nullable: true, example: Unit1}
+        accountType:
+          type: string
+          description: >-
+            Case-insensitive `checking` or `savings` (any case). Other `AccountType` names
+            parse but are not supported; unknown values return `400`.
+          example: checking
+
+    WithdrawalRequest:
+      type: object
+      required: [accountNumber, accountType, withdrawAmount, street, city, state, zip]
+      properties:
+        accountNumber:
+          type: string
+          description: Must start with `CH` or `SV` (case-insensitive).
+          example: CH-0000088291
+        accountType:
+          $ref: '#/components/schemas/AccountType'
+        withdrawAmount:
+          type: number
+          exclusiveMinimum: true
+          minimum: 0
+          description: Amount to withdraw, up to two decimals.
+          example: 100.75
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: '^[a-zA-Z]+$'
+          description: Letters only. The withdrawal-history entry stores it.
+          example: Jane
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 25
+          pattern: '^[a-zA-Z]+$'
+          description: Letters only.
+          example: Doe
+        street: {type: string, minLength: 1, example: '111'}
+        city: {type: string, minLength: 1, example: Leander}
+        state:
+          type: string
+          pattern: '^[A-Z]{2}$'
+          description: Two uppercase letters.
+          example: TX
+        zip: {type: string, minLength: 1, example: '78717'}
+        addressLine1: {type: string, nullable: true}
+        addressLine2: {type: string, nullable: true}
+        withdrawalDate:
+          type: string
+          format: date-time
+          description: Accepted but ignored - the server uses today's date.
+        withdrawalStatus:
+          type: string
+          description: Accepted but ignored - the server records `COMPLETED`.
+
+    DepositForm:
+      type: object
+      required: [accountNumber, accountType, amount, depositType, street, addressLine1, city, state, zip]
+      properties:
+        accountNumber:
+          type: string
+          description: Must start with `CH` or `SV` (case-insensitive).
+          example: SV-0000044102
+        accountType:
+          $ref: '#/components/schemas/AccountType'
+        amount:
+          type: number
+          exclusiveMinimum: true
+          minimum: 0
+          description: Amount to deposit. Cash deposits are capped (default 5000.00).
+          example: 250.00
+        depositType:
+          type: string
+          enum: [cash, check]
+          description: Case-insensitive.
+          example: check
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: '^[a-zA-Z]+$'
+          example: Jane
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 25
+          pattern: '^[a-zA-Z]+$'
+          example: Doe
+        street: {type: string, minLength: 1, example: '111'}
+        addressLine1:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: Leafvillage
+        addressLine2:
+          type: string
+          maxLength: 50
+          nullable: true
+          pattern: '^[a-zA-Z0-9 ._-]+$'
+        city:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: Leander
+        state:
+          type: string
+          pattern: '^[A-Z]{2}$'
+          example: TX
+        zip:
+          type: string
+          pattern: '^\d{5}$'
+          example: '78717'
+
+    BulkCloseAccountsRequest:
+      type: object
+      required: [accountNumbers]
+      properties:
+        accountNumbers:
+          type: array
+          minItems: 1
+          items: {type: string}
+          example: [CH-0000088291, SV-0000044102]
+
+    BulkCloseFailure:
+      type: object
+      properties:
+        accountNumber: {type: string}
+        reason:
+          type: string
+          description: Why this account was skipped (not found, or already closed).
+
+    BulkCloseAccountsResult:
+      type: object
+      properties:
+        closedAccounts:
+          type: array
+          items: {$ref: '#/components/schemas/Account'}
+        failures:
+          type: array
+          items: {$ref: '#/components/schemas/BulkCloseFailure'}
+
+    AccountTransaction:
+      type: object
+      properties:
+        accountNumber: {type: string}
+        transactionType: {$ref: '#/components/schemas/TransactionType'}
+        amount: {type: number}
+        balanceAfter: {type: number}
+        transactionDate: {type: string, format: date}
+        depositType:
+          type: string
+          nullable: true
+          description: '`cash` or `check`; only set for deposits, `null` for withdrawals.'
+
+    BankStatement:
+      type: object
+      properties:
+        accountNumber: {type: string}
+        beginDate: {type: string, format: date}
+        endDate: {type: string, format: date}
+        transactions:
+          type: array
+          items: {$ref: '#/components/schemas/AccountTransaction'}
+
+    SpringErrorResponse:
+      type: object
+      description: >-
+        Spring Boot's default error body, returned when request validation fails or a
+        parameter can't be parsed. It carries no field-level detail by default.
+      properties:
+        timestamp: {type: string, format: date-time}
+        status: {type: integer, example: 400}
+        error: {type: string, example: Bad Request}
+        path: {type: string, example: /brite/v1/api/accounts/newaccount}
